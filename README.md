@@ -1,20 +1,20 @@
 # KC-V24-Transfer
 
-* Wozu dient das Programm? *
+***Wozu dient das Programm?***
 
  Mit dem Programm gelingt es mit technischem Minimalaufwand und ohne großes Vorwissen Programme auf einen echten KC zu laden und starten und die PC-Tastatur als KC-Tastaturersatz nutzen. So kann man mit einem Basis-Device und einem M003 ohne Verrenkungen bereits KC-Feeling erleben.
  
-* Wie benutzt man das Programm *
+***Wie benutzt man das Programm***
  
  Mit dem Programm werden in einfacher Weise KC-Programme geläufiger Formate automatisch auf den KC übertragen und dort gestartet. So können Spiele und -Anwenderprogramme auf original KC-Hardware ohne Umwege zum Laufen gebracht werden.
   
-* Was das Programm nicht kann: *
+***Was das Programm NICHT kann:***
 
  - Rückkanal: Das Programm kann keine Daten vom KC auf den PC rückübertragen
  - schnelle Datenübertragung: das genutzte Verfahren zur Datenübertragung ist ziemlich langsam
  - funktioniert nur mit KC85/4
 
-* Was benötigt man zur Nutzung? (technische Voraussetzungen) *
+***Was benötigt man zur Nutzung? (technische Voraussetzungen)***
 
  - M003 - V.24-Modul (KC)
  - COM-Port (PC) (z.B. via USB-COM-Portadapter)
@@ -33,17 +33,17 @@
 
 ## Programmbedienung
 
- 1. *COM-Portauswahl*: Hier wird der Serielle Port für die Verbindung gewählt. Bereits belegte serielle Anschlüsse (ausgegraut) können nicht gewählt werden.
+ 1. ***COM-Portauswahl***: Hier wird der Serielle Port für die Verbindung gewählt. Bereits belegte serielle Anschlüsse (ausgegraut) können nicht gewählt werden.
 
- 2. *Datei Laden*: Hier wird die die Datei mit den auf den KC zu übertragenden Programm/Daten ausgewählt und ins Programm geladen. Wenn das Dateiformat eingelesen werden konnte, erscheint in der Statusanzeige "Bereit zur Datenübertragung" sowie da erkannte Datei- und Datenformat 
+ 2. ***Datei Laden***: Hier wird die die Datei mit den auf den KC zu übertragenden Programm/Daten ausgewählt und ins Programm geladen. Wenn das Dateiformat eingelesen werden konnte, erscheint in der Statusanzeige "Bereit zur Datenübertragung" sowie da erkannte Datei- und Datenformat 
 
- 3. *Übertragen*: Damit wird der Dateiinhalt mit allen notwendigen Zusatzinformationen auf den KC übertragen. Vor einer Übertragung muss der KC in der Regel per RESET zurückgesetzt werden. Während der Übertragung zeigt der KC keine meldung oder Bildänderung.
+ 3. ***Übertragen***: Damit wird der Dateiinhalt mit allen notwendigen Zusatzinformationen auf den KC übertragen. Vor einer Übertragung muss der KC in der Regel per RESET zurückgesetzt werden. Während der Übertragung zeigt der KC keine meldung oder Bildänderung.
  *Achtung:* Während die Übertragung läuft, darf die Tastatur des KC nicht benutzt werden!
  Bei der Übertragung von Binärdaten zeigt der KC sein Einschaltbild.
  Textdaten (z.B. BASIC-Programme) werden als "virtuelle Tastatureingaben" übertragen - Auf dem KC-Bildschirm ist dabei der Programmtext bei seiner Übergabe zu beobachten.
  Wenn die Übertragung abgeschlossen ist, fragt das Programm (wenn möglich), ob das übertragene Programm auf dem KC gestartet werden soll. 
 
- 4. *Tastaturmodus*: Nach der Programmübertragung* wird der KC in den Tastaturmodus geschaltet. Sofern KC-V24-Transfer das aktive fenster ist, werden alle Tastatureingaben am PC an den KC übertragen. Es gibt (selten) auch Programme, die die Duplexroutine ausschalten - in diesem Fall funktioniert die "Ferntastatur" nicht.
+ 4. ***Tastaturmodus***: Nach der Programmübertragung* wird der KC in den Tastaturmodus geschaltet. Sofern KC-V24-Transfer das aktive fenster ist, werden alle Tastatureingaben am PC an den KC übertragen. Es gibt (selten) auch Programme, die die Duplexroutine ausschalten - in diesem Fall funktioniert die "Ferntastatur" nicht.
  Ist der Modus eingeschaltet, kann auch der Inhalt der Zwischenablage vom PC an den KC übertragen werden. Entweder über die Tastenkombination "Strg-V" im Programmfenster oder das Kontextmenü (siehe unten "Tastaturmodus")
  *) wird ein Binärprogramm übertragen und im Anschluss nicht gestartet, wird der tastaturmodus nicht eingeschaltet - kann aber nachträglich manuell eingeschaltet werden.
  
@@ -68,11 +68,11 @@ Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "ak
  
  - Während laufender Datenübertragungen ist der Tastaturmodus gesperrt.
 
- - *Achtung:* Der Tastaturmodus funktioniert nicht in allen Programmen 
+ - __Achtung:__ Der Tastaturmodus funktioniert nicht in allen Programmen 
 
  - Einfügen aus der Zwischenablage 
-   - *Code (Strg+V)*: Zur übertragung von BASIC-Listings per Zwischenablage. Der Inhalt wird zeilenweise an den BASIC-Prompt übergeben - Nach jeder Zeile wird eine angemessene Pause vor der übertragung der nächsten Zeile eingelegt.
-   - *Text (Umschalt+Strg+V)*: Inhalt wird einfach "rausgeschrieben"
+   - ***Code (Strg+V)***: Zur übertragung von BASIC-Listings per Zwischenablage. Der Inhalt wird zeilenweise an den BASIC-Prompt übergeben - Nach jeder Zeile wird eine angemessene Pause vor der übertragung der nächsten Zeile eingelegt.
+   - ***Text (Umschalt+Strg+V)***: Inhalt wird einfach "rausgeschrieben"
    Am PC erstellte und bearbeitete BASIC-Listings können also einfach per Strg-V an einen laufenden BASIC-Prompt am KC übertragen werden.
    
  
@@ -88,13 +88,13 @@ Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "ak
 	 F1-F12      -> F1-F6 + Shift-(F1-F6)
      
    
-### manuelles Starten von Programmen
+### Manuelles Starten von Programmen
 
 Wurde ein Programm übertragen und nicht automatisch gestartet, so kann das Programm folgendermaßen manuell gestartet werden:
 
- - *BASIC/BASICODE-Programme*: Geben sie am Befehlsprompt des BASIC-Interpreters (">") den Befehl "RUN" ein und drücken sie "ENTER"
+ - ***BASIC/BASICODE-Programme***: Geben sie am Befehlsprompt des BASIC-Interpreters (">") den Befehl "RUN" ein und drücken sie "ENTER"
  
- - *CAOS-Programme*: Geben sie im CAOS-Menü "%MENU" ein und drücken "ENTER". Daraufhin baut sich das Menü neu auf und es erscheint darin ein neuer Eintrag mit dem Programmnamen. Navigieren sie mit den Cursortasten in die Zeile des neuen Programmnamens und drücken sie "ENTER"
+ - ***CAOS-Programme***: Geben sie im CAOS-Menü "%MENU" ein und drücken "ENTER". Daraufhin baut sich das Menü neu auf und es erscheint darin ein neuer Eintrag mit dem Programmnamen. Navigieren sie mit den Cursortasten in die Zeile des neuen Programmnamens und drücken sie "ENTER"
 
 ----
 
@@ -143,19 +143,19 @@ Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst na
 
 ### Datenformate
 
-- *Speicherabzug*
+- ***Speicherabzug***
   - Daten eines Speicherbereichs - zur Wiederherstellung wird Anfangsadresse benötigt - zum Starten eine Einsprungadresse
   - CAOS-Menüeintrag (Prologbytes -> hier neben Name auch Einsprungadresse)
   - Anfangsadresse häufig 0300h
   - können im Polling-Modus mit 1200 Baud übertragen und gestartet werden
   
-- *Tokenisierte BASIC-Programme*
+- ***Tokenisierte BASIC-Programme***
   - interne Form der Programme, wie sie der BASIC-Interpreter per CSAVE und FSAVE ablegt in Form eines Speicherabzugs (meist ab 0401h)
   - beim Einlesen werden die Daten vom _BASIC-Interpreter_ verarbeitet (Variablen bekommen z.B. ihre Speicheradresse etc.)
   - stumpf per CAOS LOAD zurückgeschriebene Speicherabbilder können deshalb in der Regel nicht (per %REBASIC->RUN) gestartet werden
   - KC-V24-Transfer enthält deshalb einen Rückkonvertierer (Detokenizer), der die tokenisierten Programmzeilen aus dem Speicherabbild extrahiert und zurück in textliche BASIC-Programmlistings konvertiert, um sie so (zeilenweise) am BASIC-Prompt in den BASIC-Interpreter zu laden. Die vom KC-V24-Transfer erzeugten BASIC-Listings werden für eine beschleunigte Übertragung in einem möglichst kompakten Format erzeugt.
   
-- *Textliche BASIC-Programmlistings*
+- ***Textliche BASIC-Programmlistings***
   - einfache Textdaten mit den Programmzeilen, wie man sie auch beim Programmieren im BASIC-Interpreter eingibt
   - können im Tastaturmodus nur sehr langsam übertragen werden
   - jede Zeile wird dabei an den BASIC-Prompt übertragen und nach einem <ENTER> vom BASIC-Interpreter tokenisiert und gespeichert
@@ -172,19 +172,13 @@ Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst na
  
  Die unterschiedliche Zeilendaten-Verarbeitungszeit wird dabei von KC-V24-Transfer beachtet: Befehlszahl, Variablenreferenzen und Feldvariablenerstellung und -zugriffe werden berechnet und die Wartezeit entsprechend angemessen um die Übertragung zu beschleunigen.
  
-### Zeichsatzkodierung
-
-  - HC-Kodierung vs ASCII vs latin1
-
-
 ### Serielles Kabel selber bauen
 
 Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu recherchieren und zu beachten
---------------------------------------------------------------------------
-Verbindungskabel  DIN 5-polig (KC V.24) <-> SUB-D (PC RS-232)
---------------------------------------------------------------------------
 
+Verbindungskabel  DIN 5-polig (KC V.24) <-> SUB-D (PC RS-232):
 
+```
 KC/M003.K2 (DIN 5polig)      PC (D-SUB 9polig)
 Anschluß Nr                  Anschluß Nr
 RxD      1   ------<------   TxD      3
@@ -192,5 +186,5 @@ Masse    2   -------------   Masse    5 (und Gehäuse)
 TxD      3   ------>------   RxD      2
 CTS      4   ------<------   RTS      7
 DTR      5   ------>------   CTS      8
-                
+```               
 Optional können im D-SUB Stecker die Anschlüsse DTR(4),DSR(6) und DCD(1) gebrückt werden
