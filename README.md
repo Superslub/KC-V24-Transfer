@@ -1,5 +1,7 @@
 # KC-V24-Transfer
 
+Download: [KC-V24-Transfer.exe](./dist/KC-V24-Transfer.exe)
+
 ***Wozu dient das Programm?***
 
  Mit dem Programm gelingt es mit technischem Minimalaufwand und ohne großes Vorwissen Programme auf einen echten KC zu laden und starten und die PC-Tastatur als KC-Tastaturersatz nutzen. So kann man mit einem Basis-Device und einem M003 ohne Verrenkungen bereits KC-Feeling erleben.
