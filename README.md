@@ -1,6 +1,6 @@
 # KC-V24-Transfer
 
-Download: [KC-V24-Transfer.exe](./dist/KC-V24-Transfer.exe)
+Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Superslub/KC-V24-Transfer/blob/main/dist/KC-V24-Transfer.exe)
 
 ***Wozu dient das Programm?***
 
