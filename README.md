@@ -21,8 +21,6 @@
  - serielles Kabel zwischen KC(DIN 5polig) <==> PC (D-SUB 9polig) - siehe Kapitel "Serielles Kabel selber bauen"
  - KC-Programme zum Laden (aus dem Netz, z.B. .KCC, .KCB, .SSS oder .BAS-Dateien)
 
-----
-
 # Nutzungshinweise
 	
 ## Vorbereitung (Hardware)
@@ -43,24 +41,23 @@
  Textdaten (z.B. BASIC-Programme) werden als "virtuelle Tastatureingaben" übertragen - Auf dem KC-Bildschirm ist dabei der Programmtext bei seiner Übergabe zu beobachten.
  Wenn die Übertragung abgeschlossen ist, fragt das Programm (wenn möglich), ob das übertragene Programm auf dem KC gestartet werden soll. 
 
- 4. ***Tastaturmodus***: Nach der Programmübertragung* wird der KC in den Tastaturmodus geschaltet. Sofern KC-V24-Transfer das aktive fenster ist, werden alle Tastatureingaben am PC an den KC übertragen. Es gibt (selten) auch Programme, die die Duplexroutine ausschalten - in diesem Fall funktioniert die "Ferntastatur" nicht.
- Ist der Modus eingeschaltet, kann auch der Inhalt der Zwischenablage vom PC an den KC übertragen werden. Entweder über die Tastenkombination "Strg-V" im Programmfenster oder das Kontextmenü (siehe unten "Tastaturmodus")
- *) wird ein Binärprogramm übertragen und im Anschluss nicht gestartet, wird der tastaturmodus nicht eingeschaltet - kann aber nachträglich manuell eingeschaltet werden.
+ 4. ***Tastaturmodus***: Nach der Programmübertragung(*) wird der KC in den Tastaturmodus geschaltet. Sofern das KC-V24-Transfer aktiv ist, werden alle Tastatureingaben am PC an den KC übertragen. Ist der Modus eingeschaltet, kann auch der Inhalt der Zwischenablage vom PC an den KC übertragen werden. Entweder über die Tastenkombination "```Strg-V```" im Programmfenster oder das Kontextmenü (siehe unten "Tastaturmodus")
+
+ (* wird ein Binärprogramm übertragen und im Anschluss nicht gestartet, wird der  Tastaturmodus nicht eingeschaltet - kann aber nachträglich manuell eingeschaltet werden.)
  
 
-### Besonderheiten BASICODE:
- Für Basicode-Programme wird automatisch der Bascoder (v1.5) vorgeladen und gestartet. Wird direkt nach einem BASICODE-Programm ein weiteres BASICODE-Programm übertragen, muss der BASICODER nicht noch einmal übertragen werden.
+#### Besonderheiten BASICODE:
+Für Basicode-Programme wird automatisch der Bascoder (v1.5) vorgeladen und gestartet. Wird direkt nach einem BASICODE-Programm ein weiteres BASICODE-Programm übertragen, muss der BASICODER nicht noch einmal übertragen werden.
 
 
-### Tastaturmodus
-
+#### Besonderheiten des Tastaturmodus:
 Der KC bietet die Möglichkeit, an der V-24-Schnittstelle eine Tastatur zu nutzen. Dafür muss der KC in den Tastatur-Modus umgeschaltet werden. Der Tastaturmodus wird nach dem Übertragen eines Programmes automatisch aktiviert, wenn das Programm mit KC-V24-Transfer auch gestartet wird oder ein BASIC-Programm übertragen wurde.
 Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "aktiv" dargestellt (Schalterfeld oben rechts).
 
  - Aktivierung des Tastaturmodus:
    - wird nach der Übertragung eines Programmes automatisch eingeschaltet
    - wird beim Einfügen aus der Zwischenablage automatisch gestartet
-   - *Ein Klick auf das Schalterfeld* startet Tastaturmodus
+   - Ein *Klick* auf das Schalterfeld startet den Tastaturmodus
    - *Doppelklick* sendet Aktivierungs-Codes für den Tastaturmodus nochmals an den KC (nützlich, nachdem der KC resetted wurde)
    - Tastaturübertragung funktioniert nur, wenn das Programmfenster den Fokus hat (also aktiv ist -> ins Fenster klicken!)
    
@@ -68,7 +65,7 @@ Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "ak
  
  - Während laufender Datenübertragungen ist der Tastaturmodus gesperrt.
 
- - __Achtung:__ Der Tastaturmodus funktioniert nicht in allen Programmen 
+ - __Achtung:__ Es gibt (selten) auch Programme, die die Duplexroutine ausschalten. In diesem Fall funktioniert die "Ferntastatur" nicht.
 
  - Einfügen aus der Zwischenablage 
    - ***Code (Strg+V)***: Zur übertragung von BASIC-Listings per Zwischenablage. Der Inhalt wird zeilenweise an den BASIC-Prompt übergeben - Nach jeder Zeile wird eine angemessene Pause vor der übertragung der nächsten Zeile eingelegt.
@@ -88,7 +85,7 @@ Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "ak
 	 F1-F12      -> F1-F6 + Shift-(F1-F6)
      
    
-### Manuelles Starten von Programmen
+#### Manuelles Starten von Programmen
 
 Wurde ein Programm übertragen und nicht automatisch gestartet, so kann das Programm folgendermaßen manuell gestartet werden:
 
@@ -188,3 +185,8 @@ CTS      4   ------<------   RTS      7
 DTR      5   ------>------   CTS      8
 ```               
 Optional können im D-SUB Stecker die Anschlüsse DTR(4),DSR(6) und DCD(1) gebrückt werden
+
+---
+***Danksagung***
+
+Dank für die Inspiration geht an E.Müller und sein "KC-Senden" von 2008.
