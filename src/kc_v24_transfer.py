@@ -1668,7 +1668,7 @@ class KC_V24_TransferApp:
             # [serial]
             if cfg.has_option("serial", "com_port_name"):
                 self.com_port_name = cfg.get("serial", "com_port_name", fallback="").strip()
-                
+            """    
             # [timeouts]
             if cfg.has_section("timeouts"):
                 self.timeout_comport              = cfg.getint("timeouts", "comport", fallback=self.timeout_comport)
@@ -1697,6 +1697,7 @@ class KC_V24_TransferApp:
                 self.textconfig_dim_ref_delay     = cfg.getint("textconfig", "dim_ref_delay",     fallback=self.textconfig_dim_ref_delay)
                 self.textconfig_dim_unit_delay    = cfg.getint("textconfig", "dim_unit_delay",    fallback=self.textconfig_dim_unit_delay)
                 self.textconfig_var_ref_delay     = cfg.getint("textconfig", "var_ref_delay",     fallback=self.textconfig_var_ref_delay)
+            """
             return True
         except Exception as e:
             print(f"load_config() Konfiguration konnte nicht geladen werden: {e}")
@@ -1714,10 +1715,12 @@ class KC_V24_TransferApp:
             "com_port_name":     self.com_port_name.strip(), 
         }
         
+        """
         cfg["timeouts"] = {
             "comport":           str(int(self.timeout_comport)),
             "job":               str(int(self.timeout_job)),
         }       
+        
         cfg["textconfig"] = {
             "showkonfigdialog":  str(bool(self.textconfig_showkonfigdialog)),
             "linewidth":         str(int(self.textconfig_linewidth)),
@@ -1739,7 +1742,7 @@ class KC_V24_TransferApp:
             "var_ref_delay":     str(int(self.textconfig_var_ref_delay)),
             
         }
-
+        """
         try:
             with self.CONFIG_PATH.open("w", encoding="utf-8") as f:
                 cfg.write(f)
