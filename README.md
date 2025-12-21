@@ -165,12 +165,12 @@ Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst na
 
 ### Übertragung per Tastaturmodus
 
- Der Transfer im Tastaturmodus ist per se sehr langsam. Die Übertragung einen Klartext-Programmlistings erfolgt so
- 1. Jede Zeile wird eingegeben und per Return an dem BASIC-Interpreter zu übergeben
+ Der Transfer im Tastaturmodus ist per se sehr langsam. Die Übertragung einen Klartext-Programmlistings erfolgt so:
+ 1. Jede Zeile wird "eingegeben" und per Return an dem BASIC-Interpreter zu übergeben
  2. Erst nach Verarbeitung durch den Interpreter kann mit der Eingabe der nächsten Zeile begonnen werden
  3. Die Verarbeitungszeit variiert dabei stark, je nach übergebenen Zeileninhalt
  
- Die unterschiedliche Zeilendaten-Verarbeitungszeit wird dabei von KC-V24-Transfer beachtet: Befehlszahl, Variablenreferenzen und Feldvariablenerstellung und -zugriffe werden berechnet und die Wartezeit entsprechend angemessen um die Übertragung zu beschleunigen.
+ Die unterschiedliche Zeilendaten-Verarbeitungszeit wird dabei von KC-V24-Transfer beachtet: Befehlszahl, Variablenreferenzen und Feldvariablenerstellung und -zugriffe werden berechnet und die Wartezeit entsprechend angemessen, um die Übertragung zu beschleunigen.
  
 ### Serielles Kabel selber bauen
 
