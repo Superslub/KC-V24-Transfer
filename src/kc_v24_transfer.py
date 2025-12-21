@@ -3,19 +3,8 @@
 # Daten werden vom COM-Port des PC auf die V.24-Schnittstelle des M003-Moduls im KC84/4 übertragen
 # Dabei wird die beim KC85/4 nach einem RESET standardmäßig aktivierte ESC-T-Polling und Interruptmodus genutzt
 #
-# Version 0.1 vom 7.12.2025
-# TODO:
-# - GUI schalten bei Übertragung
-# - blockierten COM-Port handlen
-# - .BAS-Dateiparser (Auffüllung abschneiden für Tastaturübertragung)
-# - classify_basic_text funktional machen
-# - Menü: COM-Port und BASCODER auswählbar
-# - Autostart-Funktionen einbauen
-#   - BAC854-5.KCB parsen und vorladen für BASICODE-Dateien
-# - Logik Autostart-Moduswahl im CAOS-Dialog
-# - Logik autom. ENDadresse bei Startadressenwah im CAOS-Dialog
-# - GUI-Logik für BIN-Dateien
-
+# Version 1.0 vom 21.12.2025
+# 
 # exe bauen aus dem Projektordner (oberhalb ./sys) via:
 # python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bascoder;bascoder" src\kc_v24_transfer.py
  
@@ -695,8 +684,6 @@ class KC_V24_TransferApp:
     def on_key(self, event):
         """Zentrale Tastaturbehandlung: sendet KC-Codes über V.24."""
         
-        #print(event.char)
-        print(event)
         if self.trans_state != "KEY":
             return
 
