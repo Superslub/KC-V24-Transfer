@@ -195,7 +195,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
  
 ## Serielles Kabel selber bauen
 
-Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu recherchieren und zu beachten.
+Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu beachten.
 
 Verbindungskabel  DIN 5-polig (KC V.24) <-> SUB-D (PC RS-232):
 
