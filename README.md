@@ -122,7 +122,11 @@ KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigen
 
 Warum keine höheren Übertragungsraten? Obwohl der in der Schnittstelle verbaute DART/CTC theoretisch auch höhere Übertragungsraten als 2400 Baud zulässt, kommt es bei höheren Datenraten im verwendeten asynchronen Modus (8N1) zu Übertragungsfehlern ("Bits kippen"). Das ist wahrscheinlich dem für die Baudraten etwas "schrägen" Grundtakt des KC geschuldet, der von den Schnittstellenbausteinen in den Modi oberhalb 2400 Baud als Referenztakt genutzt wird (CTC läuft für diese Modi nicht mehr im Timermodus, sondern im Countermodus). Daher können diese Modi oberhalb von 2400 Baud nur zur Kopplung von zwei Systemen gleichen Grundtaktes effektiv genutzt werden (z.B. Kopplung KC<->KC).
 
-Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt im lokalen Benutzerprofilverzeichnis unter ```%LOCALAPPDATA%\KC-V24-Transfer\KC-V24-Transfer.ini```. Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet den Schnelllader ab.
+Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt im lokalen Benutzerprofilverzeichnis unter
+
+```%LOCALAPPDATA%\KC-V24-Transfer\KC-V24-Transfer.ini```
+
+Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet den Schnelllader ab.
 
 ## Speicherformate
 
