@@ -3,10 +3,10 @@
 # Daten werden vom COM-Port des PC auf die V.24-Schnittstelle des M003-Moduls im KC84/4 übertragen
 # Dabei wird die beim KC85/4 nach einem RESET standardmäßig aktivierte ESC-T-Polling und Interruptmodus genutzt
 #
-# Version 1.0 vom 21.12.2025
+# Version 1.1 vom 23.12.2025
 # 
-# exe bauen aus dem Projektordner (oberhalb ./sys) via:
-# python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bascoder;bascoder" src\kc_v24_transfer.py
+# exe bauen aus dem Projektordner (oberhalb ./src) via:
+# python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bin;bin" src\kc_v24_transfer.py
  
 
 import tkinter as tk
@@ -25,10 +25,11 @@ from collections import deque
 from datetime import datetime
 from typing import List, Optional
 from serial.tools import list_ports
+from pathlib import Path
 
 import kc_v24_transfer_gui as gui
 
-
+from kc_v24_transfer_kcfileformattools import ParseResult
 
 from kc_v24_transfer_kcfileformattools import KC_V24_Transfer_FileFormatTools
 from kc_v24_transfer_kcfileformattools import ParseResult
@@ -46,6 +47,8 @@ class ProcessingResult(Enum):
 class KC_V24_TransferApp:
     
     APP_NAME = "KC-V24-Transfer"
+    VERSION = "1.1"
+    
     BASE_DIR      = Path(__file__).resolve().parent
     
     if os.name == "nt":
@@ -57,7 +60,7 @@ class KC_V24_TransferApp:
 
     CONFIG_PATH   = CONFIG_DIR / (APP_NAME + ".ini")
     ASSET_PATH    = BASE_DIR / "assets"
-    BASCODER_PATH = BASE_DIR / "bascoder"
+    BIN_PATH      = BASE_DIR / "bin"
     
     
     
@@ -132,7 +135,7 @@ class KC_V24_TransferApp:
         
 
         self.root = root
-        self.root.title(self.APP_NAME)
+        self.root.title(f"{self.APP_NAME} v{self.VERSION}")
         self.root.resizable(False, False)
         
         try:
@@ -141,7 +144,6 @@ class KC_V24_TransferApp:
             self.root.iconphoto(True, self._img_app_icon)
         except Exception as e:
             print(f"Logo konnte nicht geladen werden: {e}")
-        
         
         self.com_port           = None            # hält das COM-Portobjekt
         self.com_port_name      = ""              # Name des aktuellen COM-Ports (vom COM-Portobjekt)
@@ -159,6 +161,15 @@ class KC_V24_TransferApp:
          
         self.pr_bascoder         = None           # hält das ParseResult der geladenen Bascoderdatei
         self.file_name_bascoder  = None           # Dateiname der geladenen Bascoder-Datei
+        
+        # die stubs schalten die Schnittstellengeschwindigkeit zum Laden des Hauptprogramms auf 2400 Baud
+        # je nach Ladeadresse des Hauptprogramms wird ein stub vorgeladen, der ausserhalb des Speicherbereichs liegt
+        
+        self.use_turboload       = True           # wenn True, wird vor Binärübertragungen ein Stub mit 2400 Baud-Pollingroutine geladen
+        self.pr_0200stub         = None           # hält ein parseResult mit den Binärdaten des Schnittstellen-Umschalters auf 2400 Baud, der unten geladen wird
+        self.file_name_0200stub  = None           # Dateiname des Umschalter-bins
+        self.pr_BF00stub         = None           # hält ein parseResult mit den Binärdaten des Schnittstellen-Umschalters auf 2400 Baud, der oben geladen wird
+        self.file_name_BF00stub  = None           # Dateiname des Umschalter-bins
         
         self.last_basicodelinenumber = None       # die letzte Zeilennummer des BASICODE-Programmes
 
@@ -234,12 +245,6 @@ class KC_V24_TransferApp:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_exit)
 
-        # Tastatureingaben binden (Keyboard-Modus) + Paste aus Zwischenablage
-        # - button_frame wird als bindtag vor jedes Widget gesetzt -> fängt Events vor Widgets ab
-        #self.button_frame.bind("<Key>", self.on_key)
-        #self.button_frame.bind("<Control-v>", self.on_pastetext)
-        #self.button_frame.bind("<Control-V>", self.on_pastebasic)
-        
         # neu: zentral am Hauptfenster binden (greift, sobald das Fenster aktiv ist)
         self.root.bind("<KeyPress>",  self.on_key, "+")
         self.root.bind("<Control-v>", self.on_pastebasic, "+")
@@ -253,10 +258,6 @@ class KC_V24_TransferApp:
         self.button_frame.bind("<KP_Enter>", self._swallow_widget_activation_keys, "+")
         self.button_frame.bind("<space>",    self._swallow_widget_activation_keys, "+")  # optional, aber sinnvoll
 
-        # Fallback: toplevel-Bindings
-        #self.root.bind("<Control-v>", self.on_pastetext)
-        #self.root.bind("<Control-V>", self.on_pastebasic)
-        
         self.register_descendants(self.root, self.button_frame)
 
         # Kontextmenü (Rechtsklick): Einfügen aus Zwischenablage im Tastaturmodus
@@ -286,6 +287,7 @@ class KC_V24_TransferApp:
         self.init_port_menu()
         
         self.load_bascoder() # Bascoder aus datei unter ./bascoder/ laden
+        self.load_stubs()    # Umschalter-Stubs laden
         
         self.set_controls_send(text=self.SBTN_SEND, send_enabled=False)
         
@@ -335,8 +337,6 @@ class KC_V24_TransferApp:
         # Wenn kein Widget den Fokus hat, Fokus auf das Hauptfenster setzen
         if self.root.focus_get() is None:
             self.root.focus_set()
-    
-        
 
     def _center_on_primary_screen(self) -> None:
         """Zentriert das Hauptfenster auf dem primären Bildschirm."""
@@ -385,10 +385,6 @@ class KC_V24_TransferApp:
     def get_last_basicodelinenumber(self) -> str | None:
         with self._lock:
             return self.last_basicodelinenumber
-    
-    # fügt einen Job in die Jobliste
-    #def add_job(self, job: KC_Job) -> None:
-    #    self.jobs.append(job)
     
     # startet die Abarbeitung der KC_Jobs
     def start_processing(self) -> None:
@@ -595,8 +591,11 @@ class KC_V24_TransferApp:
     def _interrupt_and_close_com_port(self) -> None:
         """Versucht blockierende Schreib-/Leseoperationen zu unterbrechen und den Port zu schließen."""
         ser = self.com_port
+        self.com_port = None  # Referenz früh lösen
+
         if ser is None:
             return
+
         try:
             if hasattr(ser, "cancel_write"):
                 try:
@@ -613,9 +612,8 @@ class KC_V24_TransferApp:
                 ser.close()
             except Exception:
                 pass
-            self.com_port = None
 
-        # GUI aktualisieren (Port-Anzeige / Buttons)
+        # GUI aktualisieren
         try:
             self.refresh_port_menu()
         except Exception:
@@ -729,8 +727,6 @@ class KC_V24_TransferApp:
                 payload = bytes(latin2kc.get(b, b) for b in raw)
 
             try:
-                print(" --- ")
-                print(payload)
                 self.com_port.write(payload)
                 self.com_port.flush()
             except serial.SerialException as e:
@@ -804,18 +800,13 @@ class KC_V24_TransferApp:
         pr_nodata.transferdata = bytearray()
         
         if self.trans_state != "KEY":
-            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
+            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
         
-        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDTEXT, pr=pr, ser=self.com_port))    
-        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, ser=self.com_port, pause=None, askstart=True))
-        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port))
+        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDTEXT, pr=pr))    
                 
         self.start_processing()
 
         print(pr)
-
-        #except serial.SerialException as e:
-        #    print(f"on_paste: {e}")
 
         return "break"
 
@@ -860,18 +851,13 @@ class KC_V24_TransferApp:
         pr_nodata.transferdata = bytearray()
         
         if self.trans_state != "KEY":
-            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
+            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
         
-        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, ser=self.com_port, pause=None))    
-        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, ser=self.com_port, pause=None, askstart=True))
-        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port))
-                
+        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, pause=None))    
+                 
         self.start_processing()
 
         print(pr)
-
-        #except serial.SerialException as e:
-        #    print(f"on_paste: {e}")
 
         return "break"
 
@@ -1063,7 +1049,66 @@ class KC_V24_TransferApp:
             return
     
         finally:
-            self._update_keybmode_button
+            self._update_keybmode_button()
+            
+    
+    def load_stubs(self) -> None:
+        """
+        Lädt 2400-Baud-Umschaltstubs und bereitet ParseResults vor,
+        die oben oder unten im Speicherraum als Preloader geladen werden können
+        """
+        try:
+        
+            # Stub für den unteren Speicherbereich
+            
+            stub_path = self.BASE_DIR / "bin" / "Polling_2400_8N1_ESC-T_0200.bin"  # Dateiname ggf. anpassen
+            data = bytearray(stub_path.read_bytes())
+            if not data:
+                raise ValueError("200-Stub ist leer.")
+
+            pr = ParseResult()
+            pr.format = ParseResult._FORMAT_RAW
+            pr.type = ParseResult._TYPE_MC
+            pr.errorstate = False
+            pr.validstate = 0
+
+            pr.transferdata = data
+            pr.start = 0x200
+            pr.end = pr.start + len(pr.transferdata)
+
+            pr.callp = pr.start
+            pr.callh = pr.start
+            pr.callu = pr.start
+
+            self.pr_0200stub = pr
+
+            # Stub für den oberen Speicherbereich
+
+            stub_path = self.BASE_DIR / "bin" / "Polling_2400_8N1_ESC-T_BF00.bin"  # Dateiname ggf. anpassen
+            data = bytearray(stub_path.read_bytes())
+            if not data:
+                raise ValueError("BF00-Stub ist leer.")
+
+            pr = ParseResult()
+            pr.format = ParseResult._FORMAT_RAW
+            pr.type = ParseResult._TYPE_MC
+            pr.errorstate = False
+            pr.validstate = 0
+
+            pr.transferdata = data
+            pr.start = 0xBF00
+            pr.end = pr.start + len(pr.transferdata)
+
+            pr.callp = pr.start
+            pr.callh = pr.start
+            pr.callu = pr.start
+
+            self.pr_BF00stub = pr
+
+        except Exception as e:
+            self.pr_BF00stub = None
+            self.pr_0200stub = None
+            messagebox.showerror("Fehler", f"Ein Stub konnte nicht geladen werden:\n{e}", parent=self.root)
           
     def load_bascoder(self):
         """
@@ -1071,7 +1116,7 @@ class KC_V24_TransferApp:
         """
         print("load_bascoder")
         try:
-            path = str(self.BASCODER_PATH) + "/BAC854-5.KCB"
+            path = str(self.BIN_PATH) + "/BAC854-5.KCB"
             with open(path, "rb") as f:
                 filedata = bytearray(f.read())
             if not filedata:
@@ -1096,9 +1141,7 @@ class KC_V24_TransferApp:
             self.pr_bascoder = pr
             
             self.file_name_bascoder = file_name
-            #self.set_transfer_status(status="bereit zur Datenübertragung")
-            #self.set_controls_send(text=self.SBTN_SEND, send_enabled=True)
-
+            
             print(f"load_bascoder -> Bascoder-Datei \"{self.file_name_bascoder}\" geladen")
             
         except Exception as e:
@@ -1195,9 +1238,16 @@ class KC_V24_TransferApp:
             pr_nodata = copy.deepcopy(self.pr)
             pr_nodata.transferdata = bytearray()
             
-            pr_bascoder_nodata = copy.deepcopy(self.pr)
+            pr_bascoder_nodata = copy.deepcopy(self.pr_bascoder)
             pr_bascoder_nodata.transferdata = bytearray()
             #self.last_basicodelinenumber = None
+            
+            pr_0200stub_nodata = copy.deepcopy(self.pr_0200stub)
+            pr_0200stub_nodata.transferdata = bytearray()
+            
+            pr_BF00stub_nodata = copy.deepcopy(self.pr_BF00stub)
+            pr_BF00stub_nodata.transferdata = bytearray()
+            
             
             # testweise Jobs bauen und abarbeiten
             self.jobs = []
@@ -1226,8 +1276,8 @@ class KC_V24_TransferApp:
                 if dlg.result: self.trans_state = None
                 else: return
 
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDTEXT,      pr=self.pr, ser=self.com_port))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDTEXT,      pr=self.pr))
                 self.start_processing()
                 
             elif self.pr.type == self.pr._TYPE_BASICTEXT:
@@ -1240,10 +1290,10 @@ class KC_V24_TransferApp:
                 if dlg.result: self.trans_state = None
                 else: return
                 
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTBASIC,    pr=pr_nodata, ser=self.com_port))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=self.pr, ser=self.com_port, pause=None, askstart=True))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTBASIC,    pr=pr_nodata))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=self.pr, pause=None, askstart=True))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata))
                 self.start_processing()
                 
 
@@ -1262,41 +1312,70 @@ class KC_V24_TransferApp:
                     bascoderload = messagebox.askyesno("BASICODE-Programm", "Ist der Bascoder bereits geladen?\"Ja\": Das Programm wird direkt geladen.\n\n\"Nein\": Der Bascoder wird mitübertragen", parent=self.root)
                     if not bascoderload:
 
-                        print("Frage-Bascoder mitladen: Nein")
+                        print("Frage-Bascoder mitladen: Ja")
 
                         # RESET am KC erfragen
                         dlg = gui.DualOptionsDialog(self.root, title="Achtung", text="Vor der Übertragung\n\n RESET\n\nam KC drücken!", okbuttontext="Erledigt!")
                         if dlg.result: self.trans_state = None
                         else: return
 
+                        if self.use_turboload:   # stub mit 2400 Baud-Routine vorladen und starten
+                            # passenden Stub (Preloader) auswählen
+                            if self.pr_bascoder.start <= self.pr_0200stub.end:
+                                print(f"-- oberen Stub vorladen {self.pr_BF00stub.start:04X}")
+                                pr_stub        = self.pr_BF00stub
+                                pr_stub_nodata = pr_BF00stub_nodata
+                            else:
+                                print(f"-- unteren Stub vorladen {self.pr_0200stub.start:04X}")
+                                pr_stub        = self.pr_0200stub
+                                pr_stub_nodata = pr_0200stub_nodata
+
+                            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
+                            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+
                         # Bascoder vorladen
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder, ser=self.com_port))
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, ser=self.com_port, pause=500))
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port, pause=3000))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, pause=500))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, pause=3000))
                         # Binärstart des Bascoder funktioniert nicht
-                        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder, ser=self.com_port))
-                        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_bascoder_nodata, ser=self.com_port, pause=5000))
+                        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder))
+                        #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_bascoder_nodata, pause=5000))
 
                     else:
-                        print("Frage-Bascoder mitladen: Ja")
+                        print("Frage-Bascoder mitladen: Nein")
                         # Bascoder - geladenes Programm zurücksetzen
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE,  pr=pr_nodata, ser=self.com_port))
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RESETBASCODER, pr=pr_nodata, ser=self.com_port))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE,  pr=pr_nodata))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RESETBASCODER, pr=pr_nodata))
 
                 else:   # Bascoder auf jeden Fall laden
                     # Bascoder vorladen
                     dlg = gui.DualOptionsDialog(self.root, title="Achtung", text="Vor der Übertragung\n\n RESET\n\nam KC drücken!", okbuttontext="Erledigt!")
                     if dlg.result: self.trans_state = None
                     else: return
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder, ser=self.com_port))
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, ser=self.com_port, pause=500))
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port, pause=3000))
+                    
+                    if self.use_turboload:   # stub mit 2400 Baud-Routine vorladen und starten
+                        # passenden Stub (Preloader) auswählen
+                        if self.pr_bascoder.start <= self.pr_0200stub.end:
+                            print(f"-- oberen Stub vorladen {self.pr_BF00stub.start:04X}")
+                            pr_stub        = self.pr_BF00stub
+                            pr_stub_nodata = pr_BF00stub_nodata
+                        else:
+                            print(f"-- unteren Stub vorladen {self.pr_0200stub.start:04X}")
+                            pr_stub        = self.pr_0200stub
+                            pr_stub_nodata = pr_0200stub_nodata
+
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                    
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder, set_ser_br=1200))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, pause=500))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, pause=3000))
 
                 # Basicode-Programm laden    
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT,  pr=self.pr, ser=self.com_port, pause=None, askstart=True, savelastline=True))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,       pr=pr_nodata, ser=self.com_port))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT,  pr=self.pr, pause=None, askstart=True, savelastline=True))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,       pr=pr_nodata))
                 self.start_processing()
                 
 
@@ -1309,11 +1388,26 @@ class KC_V24_TransferApp:
                 dlg = gui.DualOptionsDialog(self.root, title="Achtung", text="Vor der Übertragung\n\n RESET\n\nam KC drücken!", okbuttontext="Erledigt!")
                 if dlg.result: self.trans_state = None
                 else: return
+                
+                if self.use_turboload:   # stub mit 2400 Baud-Routine vorladen und starten
+                    # passenden Stub (Preloader) auswählen
+                    if self.pr.start <= self.pr_0200stub.end:
+                        print(f"-- oberen Stub vorladen {self.pr_BF00stub.start:04X}")
+                        pr_stub        = self.pr_BF00stub
+                        pr_stub_nodata = pr_BF00stub_nodata
+                    else:
+                        print(f"-- unteren Stub vorladen {self.pr_0200stub.start:04X}")
+                        pr_stub        = self.pr_0200stub
+                        pr_stub_nodata = pr_0200stub_nodata
 
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, ser=self.com_port, pause=None, askstart=True))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, ser=self.com_port, pause=500))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata, ser=self.com_port))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTREBASIC,  pr=pr_nodata, pause=500))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBASIC,      pr=pr_nodata))
+                
                 self.start_processing()
                 pass
                 
@@ -1327,10 +1421,29 @@ class KC_V24_TransferApp:
                 if dlg.result: self.trans_state = None
                 else: return
 
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, ser=self.com_port, pause=None, askstart=True))
-                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_nodata, ser=self.com_port, pause=800))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata, ser=self.com_port))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata, ser=self.com_port))
+                if self.use_turboload:   # stub mit 2400 Baud-Routine vorladen und starten
+                    # passenden Stub (Preloader) auswählen
+                    if self.pr.start <= self.pr_0200stub.end:
+                        print(f"-- oberen Stub vorladen {self.pr_BF00stub.start:04X}")
+                        pr_stub        = self.pr_BF00stub
+                        pr_stub_nodata = pr_BF00stub_nodata
+                    else:
+                        print(f"-- unteren Stub vorladen {self.pr_0200stub.start:04X}")
+                        pr_stub        = self.pr_0200stub
+                        pr_stub_nodata = pr_0200stub_nodata
+
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                    
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata))
+                
+                
+                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, pause=None, askstart=True))
+                ##self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_nodata, pause=800))
+                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata))
                 
                 self.start_processing()
 
@@ -1374,13 +1487,12 @@ class KC_V24_TransferApp:
         return f"{m}m{s:02d}s"
 
     
-    def open_port(self) -> Optional[serial.Serial]:
+    def open_port(self, br=1200) -> Optional[serial.Serial]:
         port_name = self.com_port_name
-
         try:
             ser = serial.Serial(
                 port_name,
-                baudrate=1200,
+                baudrate=br,
                 bytesize=serial.EIGHTBITS,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
@@ -1653,8 +1765,11 @@ class KC_V24_TransferApp:
             cfg.read(self.CONFIG_PATH, encoding="utf-8")
 
             # [serial]
-            if cfg.has_option("serial", "com_port_name"):
+            if cfg.has_section("serial"):
+            #if cfg.has_option("serial", "com_port_name"):
                 self.com_port_name = cfg.get("serial", "com_port_name", fallback="").strip()
+                self.use_turboload = cfg.getboolean("serial", "use_turboload", fallback=self.use_turboload)
+                
             """    
             # [timeouts]
             if cfg.has_section("timeouts"):
@@ -1690,16 +1805,18 @@ class KC_V24_TransferApp:
             print(f"load_config() Konfiguration konnte nicht geladen werden: {e}")
             return False
 
-    def save_config(self) -> None:
+    def save_config(self) -> bool:
         try:
             self.CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             print(f"save_config() Konfigurationsverzeichnis konnte nicht angelegt werden: {e}")
+            return False
             
         cfg = configparser.ConfigParser()
 
         cfg["serial"] = {
-            "com_port_name":     self.com_port_name.strip(), 
+            "com_port_name":     self.com_port_name.strip(),
+            "use_turboload":     self.use_turboload
         }
         
         """
@@ -1727,7 +1844,6 @@ class KC_V24_TransferApp:
             "dim_ref_delay":     str(int(self.textconfig_dim_ref_delay)),
             "dim_unit_delay":    str(int(self.textconfig_dim_unit_delay)),
             "var_ref_delay":     str(int(self.textconfig_var_ref_delay)),
-            
         }
         """
         try:
@@ -1735,7 +1851,9 @@ class KC_V24_TransferApp:
                 cfg.write(f)
         except Exception as e:
             print(f"save_config() Konfiguration konnte nicht gespeichert werden: {e}")
-    
+            return False
+
+        return True
     
     # Ausgabe in das Statusfeld 
     def set_transfer_status(self,
@@ -1861,5 +1979,7 @@ class KC_V24_TransferApp:
 if __name__ == "__main__":
     master = tk.Tk()
     app = KC_V24_TransferApp(master)
-    
+
+    print(f"\n{app.APP_NAME} {app.VERSION}")
+
     master.mainloop()

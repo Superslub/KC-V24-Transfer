@@ -1,4 +1,3 @@
-# kc_v24_transfer_delay_analyzer.py
 from __future__ import annotations
 
 import ast

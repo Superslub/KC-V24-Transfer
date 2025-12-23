@@ -1,0 +1,84 @@
+10 ! Beendbar durch Tastendruck
+20 !
+30 HC=0 : FC=1    :!Farben (2 gibt es)
+40 L=40           :!Anzahl Linien
+50 SP=4:MS=2      :!Speed/Minspeed (4:2)
+60 PV=20:PH=40    :!Randabstand des Zeichenfeldes mind. 1 (50:70)
+70 !
+80 E$=CHR$(27)    :!ESC
+90 RANDOMIZE
+100 !OUT 126,INP(126)OR4   :!IRM ein 
+110 V=PEEK(497)
+120 FE=0 : IF(V AND 2)=0 THEN FE=1 :!Farbebene aktiv?
+130 BM=0 : IF(V AND 8)=0 THEN BM=1 :!Bitmodus (pixelweise) aktiv?
+170 IF FE=0 THEN ? E$;"9"; :!PixelRAM einschalten
+180 IF BM=0 THEN ? E$;"A"; :!hohe Farbaufloesung
+190 COLOR 0,0
+200 !
+220 PRINT E$;"3";:CLS  :!Init Bild 0
+230 PRINT E$;"4";:CLS  :!Init Bild 1
+240 !
+250 ! init
+260 !
+350 RL=PH+1:RR=318-RL:RU=PH+1:RO=254-RU:!Platz für Rahmen
+360 DIM K(L,4)         :!Linienenpunktspeicher XA,YE,XE,YE
+400 IF RND(1)<0.5 THEN S=-1:ELSE S=1
+410 a1=S*(INT(SP*RND(1))+MS):IF RND(1)<0.5 THEN S=-1: ELSE S=1
+412 b1=S*(INT(SP*RND(1))+MS):IF RND(1)<0.5 THEN S=-1: ELSE S=1
+413 a2=S*(INT(SP*RND(1))+MS):IF RND(1)<0.5 THEN S=-1: ELSE S=1
+414 b2=S*(INT(SP*RND(1))+MS)
+415 K(L,0)=INT((RR-RL)*RND(1)+RL):K(L,1)=INT((RO-RU)*RND(1)+RU)
+416 K(L,2)=INT((RR-RL)*RND(1)+RL):K(L,3)=INT((RO-RU)*RND(1)+RU)
+417 !
+420 ? E$;"3"; :GOSUB 450 :!Rahmen verdeckt zeichnen
+430 ? E$;"4"; :GOSUB 450 :!Rahmen verdeckt zeichnen
+435 ? E$;"1";
+436 !
+440 GOTO 500 :! Subroutine -> überspringen
+450 ! Rahmen zeichnen
+460 LINE RL-1,RU-1,RL-1,RO+1,1:LINE RL-1,RO+1,RR+1,RO+1,1
+470 LINE RR+1,RO+1,RR+1,RU-1,1:LINE RR+1,RU-1,RL-1,RU-1,1
+480 RETURN
+490 !
+500 ! --------------- Loop
+505 FOR A = 0 TO L 
+510 IF A=L THEN ZL=0 :ELSE ZL=A+1 :!Zeiger auf aktuellen Loesch-Index
+515 IF A=0 THEN ZH=L :ELSE ZH=A-1 :!Zeiger auf letzten Durchgangssatz 
+516 ! Bounce
+520 XA=K(ZH,0):YA=K(ZH,1):XE=K(ZH,2):YE=K(ZH,3)
+530 XA=XA+a1:IF XA>RR THEN GOSUB1800 
+540 IF XA<RL THEN GOSUB1900
+550 YA=YA+b1:IF YA>RO THEN GOSUB1820
+560 IF YA<RU THEN GOSUB1920
+570 XE=XE+a2:IF XE>RR THEN GOSUB1840
+580 IF XE<RL THEN GOSUB1940
+590 YE=YE+b2:IF YE>RO THEN GOSUB1860
+600 IF YE<RU THEN GOSUB1960
+605 !
+610 ! aktuelle Koordinaten speichern
+620 K(A,0)=XA:K(A,1)=YA:K(A,2)=XE:K(A,3)=YE
+630 !
+640 ! Loeschkoordinaten speichern
+650 DA=K(ZL,0):EA=K(ZL,1):DE=K(ZL,2):EE=K(ZL,3)
+660 !
+700 ! Linien zeichnen
+730 LINE DA,EA,DE,EE,HC  :! aelteste loeschen
+740 LINE XA,YA,XE,YE,FC  :! neueste zeichnen
+750 !
+800 IF INKEY$<>"" THEN GOTO 9000 :!stop
+900 ! 
+910 NEXT A
+1000 GOTO 500 : ! -------------- Loop
+1100 !
+1800 a1=-(INT(SP*RND(1))+MS): XA=RR+a1 :RETURN
+1820 b1=-(INT(SP*RND(1))+MS): YA=RO+b1 :RETURN
+1840 a2=-(INT(SP*RND(1))+MS): XE=RR+a2 :RETURN
+1860 b2=-(INT(SP*RND(1))+MS): YE=RO+b2 :RETURN
+1870 !
+1900 a1=INT(SP*RND(1))+MS: XA=RL+a1 :RETURN
+1920 b1=INT(SP*RND(1))+MS: YA=RU+b1 :RETURN
+1940 a2=INT(SP*RND(1))+MS: XE=RL+a2 :RETURN
+1960 b2=INT(SP*RND(1))+MS: YE=RU+b2 :RETURN
+9000 !
+9100 PRINT E$;"1"        :!Bild0
+9200 END

@@ -107,7 +107,6 @@ class KC_V24_Transfer_FileFormatTools:
         if b < 0x20 or b > 0x7F: # Zulässiger Zeichenbereich nur von 0x20 bis 0x7F
             return False
 
-        # 0x20–0x7E und 0xA0–0xFF gelten als darstellbare Zeichen
         return True
 
 
@@ -291,7 +290,7 @@ class KC_V24_Transfer_FileFormatTools:
                 if run_len > 0:
                     cut_index = length - run_len
             if cut_index:
-                print(f"parseformatTEXT() Auffüllung gefunden: {cut_index}")
+                print(f"parseformatTEXT() Auffuellung gefunden: {cut_index}")
             
         # Relevanten Textbereich ohne Füllzeichen
         text_bytes = data[:cut_index]

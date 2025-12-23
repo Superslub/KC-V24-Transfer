@@ -1,21 +1,20 @@
 from __future__ import annotations
-#import tkinter as tk
 from tkinter import messagebox
 import serial
 import time
 import threading
+
 from dataclasses import dataclass, field
 from serial.tools import list_ports
-from typing import Callable, List, Optional, TYPE_CHECKING
+from typing import Callable, List, Optional, Union, TYPE_CHECKING
 
 from kc_v24_transfer_kcfileformattools import ParseResult
 from kc_v24_transfer_basiclinedimanalyzer import BasicLineDimAnalyzer
 from kc_v24_transfer_basiclinevaranalyzer import BasicLineVarAnalyzer
 
 if TYPE_CHECKING:
-    from kc_v24_transfer import KC_V24TransferApp  # nur für Typprüfung, kein Laufzeit-Import
+    from kc_v24_transfer import KC_V24_TransferApp  # nur für Typprüfung, kein Laufzeit-Import
 import re
-import sys
 import sys
 
 if sys.stdout is not None and hasattr(sys.stdout, "reconfigure"):
@@ -47,11 +46,10 @@ class KC_Job:
     _JT_RESETBASCODER  = 10  # TODO Setzt den Bascoder in der Bascoder-Oberfläche zurück
     
     # Properties
-    parent: KC-V24TransferApp | None       # Hauptklasse
+    parent: KC_V24_TransferApp | None       # Hauptklasse
     
     type:   int | None                  # Typ des Jobs (_JT_xxx)
     pr:     ParseResult | None          # Parseresult, welches übertragen werden soll (Nutzdatenobjekt aus dem die auszuführenden Funktionsusfufe abgeleitet werden)
-    ser:    serial.Serial | None        # serielles Portobjekt, auf den die Datenausgabe erfolgt
     pause:  int | None                  # Zeit in ms, die nach der Abarbeitung gewartet wird
     state:  int | None                  # aktueller Status des Jobs (_JS_xxx)
     askstart: bool = False              # wenn True, wird "Programm jetzt starten" gefragt und bei Antwort "OK"
@@ -60,15 +58,17 @@ class KC_Job:
     cancelable: bool = False            # ist JOB aktuell cancelbar
     savelastline:bool = False           # wenn gesetzt, wird die letzte gelesene Basic-Zeilennummer von einem _JT_SENDBASICTEXT-Typ per set_last_basicodelinenumber global gespeichert
     
-    def __init__(self, parent: KC-V24TransferApp, type: int, pr: ParseResult, ser: serial.Serial, pause: int = 0, askstart=False, savelastline=False) -> None:
+    set_ser_br = None                   # Soll-Geschwindigkeit für Schnittstelle nach Umschaltung
+    
+    def __init__(self, parent: KC_V24_TransferApp, type: int, pr: ParseResult, pause: int = 0, askstart=False, savelastline=False, set_ser_br=None) -> None:
         self.parent       = parent
         self.type         = type
         self.askstart     = askstart
         self.pr           = pr
-        self.ser          = ser
         self.state        = self._JS_WAITING
         self.pause        = pause
         self.savelastline = savelastline
+        self.set_ser_br   = set_ser_br
 
         self.total   = len(pr.transferdata)
         #print(f"TRANSFERDATA: {len(pr.transferdata)}")
@@ -88,6 +88,15 @@ class KC_Job:
         """Thread-sicherer Schnappschuss für Statusabfragen im Haupt-/GUI-Thread."""
         with self._lock:
             return self.state, self.sent, self.cancelable
+
+
+    def _get_ser(self) -> serial.Serial:
+        """Liefert das aktuelle COM-Portobjekt aus dem Parent (wird erst zur Laufzeit gebunden)."""
+        ser = getattr(self.parent, "com_port", None)
+        if ser is None or not getattr(ser, "is_open", False):
+            raise serial.PortNotOpenError("COM-Port ist nicht geöffnet.")
+        return ser
+
 
     def startjob(self) -> None:
         """
@@ -140,6 +149,28 @@ class KC_Job:
                 # Typ nicht implementiert -> als Fehler markieren
                 raise NotImplementedError(f"Job-Typ {self.type} nicht implementiert")
 
+            # Umschalten auf 9600 Baud
+            if self.state == self._JS_DONE and self.set_ser_br:
+                new_br = int(self.set_ser_br)
+                print(f"COM -> neue Baudrate: {new_br}")
+                try:
+                    if self.parent.com_port is not None:
+                        self.parent.com_port.flush()
+                except Exception:
+                    pass
+                self.parent._close_current_port()
+                self.parent.com_port = self.parent.open_port(new_br)
+                if self.parent.com_port is None:
+                    with self._lock:
+                        self.state = self._JS_FAILED
+                
+                # debug text
+                #print (f"------{new_br}----------")
+                #time.sleep(0.1)
+                #ser = self._get_ser()
+                #ser.write(b"\x0D")
+                #ser.flush()
+
             # Frage nach einem Start
             if self.state == self._JS_DONE and self.askstart:
                 print("Frage-Starten")
@@ -175,11 +206,12 @@ class KC_Job:
     # (Tastaturausgaben)
     def job_startkeybmode(self) -> bool:
         print("job_startkeybmode() wird gestartet")
-        if self.ser is None: print("job_startkeybmode: ser"); return False
+        
         
         try:
-            self.ser.write(b"\x0D")
-            self.ser.flush()
+            ser = self._get_ser()
+            ser.write(b"\x0D")
+            ser.flush()
             
             # Schnittstellen-Modus wurde umgeschaltet
             self.parent.set_trans_state("KEY")
@@ -202,21 +234,21 @@ class KC_Job:
     # der Keyboardmodus sollte dafür schon gesetzt sein
     def job_startbasic(self) -> bool:
         print("job_startbasic() wird gestartet")
-        if self.ser is None: print("job_startbasic: ser"); return False
         
         try:
+            ser = self._get_ser()
             
-            self.ser.write("B".encode("ascii", errors="replace"))# B in CHAOS
-            self.ser.flush()
+            ser.write("B".encode("ascii", errors="replace"))# B in CHAOS
+            ser.flush()
             time.sleep(self.parent.textconfig_char_delay / 1000.0)
-            self.ser.write(b"\x0D") # ENTER
-            self.ser.flush()
+            ser.write(b"\x0D") # ENTER
+            ser.flush()
             time.sleep(self.parent.textconfig_init_basic1delay / 1000.0)
-            self.ser.write(b"\x0D") # ENTER
-            self.ser.flush()
+            ser.write(b"\x0D") # ENTER
+            ser.flush()
             time.sleep(self.parent.textconfig_init_basic2delay / 1000.0)
-            #self.ser.write("RUN".encode("ascii", errors="replace"))# B in CHAOS
-            #self.ser.flush()
+            #ser.write("RUN".encode("ascii", errors="replace"))# B in CHAOS
+            #ser.flush()
             with self._lock:
                 self.state = self._JS_DONE
                 
@@ -230,13 +262,13 @@ class KC_Job:
     # (Tastaturausgaben)
     def job_runbasic(self) -> bool:
         print("job_runbasic() wird gestartet")
-        if self.ser is None: print("job_runbasic: ser"); return False
         
         try:
+            ser = self._get_ser()
             #time.sleep(self.parent.textconfig_init_basic2delay / 1000.0)
-            self.ser.write("RUN".encode("ascii", errors="replace"))# B in CHAOS
-            self.ser.write(b"\x0D") # ENTER
-            self.ser.flush()
+            ser.write("RUN".encode("ascii", errors="replace"))# B in CHAOS
+            ser.write(b"\x0D") # ENTER
+            ser.flush()
             
             with self._lock:
                 self.state = self._JS_DONE
@@ -251,26 +283,26 @@ class KC_Job:
     # (Tastaturausgaben)
     def job_resetbascoder(self) -> bool:
         print("job_resetbascoder() wird gestartet")
-        if self.ser is None: print("job_runbasic: ser"); return False
         
         try:
+            ser = self._get_ser()
             lln = self.parent.get_last_basicodelinenumber()
             print(f"job_resetbascoder() letzte Zeile: {lln}")
 
             if lln is not None:
                 
-                self.ser.write(b"\x03")  # besser ein BRK senden
-                self.ser.flush()
+                ser.write(b"\x03")  # besser ein BRK senden
+                ser.flush()
                 time.sleep(300 / 1000.0)
                 
-                self.ser.write(f"DELETE 1000,{lln}".encode("ascii"))
-                self.ser.write(b"\x0D") # ENTER
-                self.ser.flush()
+                ser.write(f"DELETE 1000,{lln}".encode("ascii"))
+                ser.write(b"\x0D") # ENTER
+                ser.flush()
                 time.sleep(300 / 1000.0)
                 
-                self.ser.write("CLEAR".encode("ascii"))
-                self.ser.write(b"\x0D") # ENTER
-                self.ser.flush()
+                ser.write("CLEAR".encode("ascii"))
+                ser.write(b"\x0D") # ENTER
+                ser.flush()
                 time.sleep(300 / 1000.0)
                 
             with self._lock:
@@ -288,12 +320,12 @@ class KC_Job:
     # (Tastaturausgaben)
     def job_startrebasic(self) -> bool:
         print("job_startrebasic() wird gestartet")
-        if self.ser is None: print("job_startrebasic: ser"); return False
         
         try:
-            self.ser.write("REBASIC".encode("ascii", errors="replace"))# B in CHAOS
-            self.ser.write(b"\x0D") # ENTER
-            self.ser.flush()
+            ser = self._get_ser()
+            ser.write("REBASIC".encode("ascii", errors="replace"))# B in CHAOS
+            ser.write(b"\x0D") # ENTER
+            ser.flush()
             time.sleep(self.parent.textconfig_init_rebasicdelay / 1000.0)
             with self._lock:
                 self.state = self._JS_DONE
@@ -310,7 +342,6 @@ class KC_Job:
     def job_sendtext(self, fastmode: bool = False, endreturn: bool | None = None, sll: bool | None = None) -> bool:
         print(f"job_sendtext() fastmode: {fastmode}")
         print(f"job_sendtext() endreturn: {endreturn}")
-        if self.ser is None: print("job_sendtext: ser"); return False
         
         dimanalyzer = BasicLineDimAnalyzer(option_base=0)
         varanalyzer = BasicLineVarAnalyzer()
@@ -321,7 +352,7 @@ class KC_Job:
             return True
         
         try:
-                
+            ser = self._get_ser()    
             cursor_line      = 0    # aktuelle Zeile des Cursors auf dem KC
             cursor_row       = self.parent.textconfig_promptwidth             # Cursor steht am Prompt 
             cursor_is_in_string = False # True, wenn der Cursor in einem Strinliteral steht
@@ -338,17 +369,17 @@ class KC_Job:
 
             if fastmode:  # im Fastmode wird der Bildschirm initial und nach dem Vollschreiben gelöscht (Verhinderung von Zeilenscrolling)
                 #time.sleep(delay_ms / 1000.0)   
-                self.ser.write(b"\x0C")
+                ser.write(b"\x0C")
                 time.sleep(self.parent.textconfig_char_delay / 1000)
                 
-                #self.ser.write(b"C")
+                #ser.write(b"C")
                 #time.sleep(self.parent.textconfig_char_delay / 1000)
-                #self.ser.write(b"L")
+                #ser.write(b"L")
                 #time.sleep(self.parent.textconfig_char_delay / 1000)
-                #self.ser.write(b"S")
+                #ser.write(b"S")
                 #time.sleep(self.parent.textconfig_char_delay / 1000)
-                self.ser.write(b"\x0D")
-                self.ser.flush()
+                ser.write(b"\x0D")
+                ser.flush()
                 time.sleep(self.parent.textconfig_init_clsdelay / 1000)
                 cursor_line = 2
 
@@ -365,8 +396,8 @@ class KC_Job:
                 if charbyte == 0x0A:  # nur CR 0x0D soll im text gesendet werden
                     continue  # Rest überspringen, nächster Durchlauf
                 
-                self.ser.write(bytes([charbyte]))
-                self.ser.flush()
+                ser.write(bytes([charbyte]))
+                ser.flush()
                 
                 with self._lock:
                     self.sent = i
@@ -415,16 +446,16 @@ class KC_Job:
 
                     if fastmode and cursor_line >= self.parent.textconfig_lines - 1:  # x0C braucht 1 Zeile  - CLS braucht 2(!) Zeilen (inkl. Enter)
                         time.sleep(delay_ms / 1000.0)   # Prozessdauer etc abwarten
-                        self.ser.write(b"\x0C")
+                        ser.write(b"\x0C")
                         time.sleep(self.parent.textconfig_char_delay / 1000)
-                        #self.ser.write(b"C")
+                        #ser.write(b"C")
                         #time.sleep(self.parent.textconfig_char_delay / 1000)
-                        #self.ser.write(b"L")
+                        #ser.write(b"L")
                         #time.sleep(self.parent.textconfig_char_delay / 1000)
-                        #self.ser.write(b"S")
+                        #ser.write(b"S")
                         #time.sleep(self.parent.textconfig_char_delay / 1000)
-                        self.ser.write(b"\x0D")
-                        self.ser.flush()
+                        ser.write(b"\x0D")
+                        ser.flush()
                         time.sleep(self.parent.textconfig_init_clsdelay / 1000)
                         #print("CLS")
                         cursor_line = 2
@@ -473,10 +504,10 @@ class KC_Job:
                 delay_ms += linecommandcount * self.parent.textconfig_command_addition   # zusätzliche Berechnungszeit bei mehreren Befehlen
                 delay_ms += totallinecount * self.parent.textconfig_linethrottle         # mehr Zeit bei vielen Zeilen
                 time.sleep(delay_ms / 1000.0)
-                self.ser.write(b"\x0D")
+                ser.write(b"\x0D")
                 #time.sleep(self.parent.textconfig_char_delay / 1000.0)
-                #self.ser.write(b"\x0A")
-                self.ser.flush()
+                #ser.write(b"\x0A")
+                ser.flush()
                 self.parent.textconfig_linescroll_delay
                 delay_ms = self.parent.textconfig_process_delay                          # Verarbeitungszeit
                 delay_ms += linecommandcount * self.parent.textconfig_command_addition   # zusätzliche Berechnungszeit bei mehreren Befehlen
@@ -512,7 +543,6 @@ class KC_Job:
         
         self.parent.set_last_basicodelinenumber(None)  # nach einem BIN-Senden ist kein Bascoder mehr geladen
         
-        if self.ser is None: print("job_sendbin: ser"); return False
         if self.pr.errorstate: print("job_sendbin: pr.errorstate"); return False
         if not self.pr.transferdata or len(self.pr.transferdata) == 0: print("job_sendbin: pr.transferdata"); return False
         if not self.pr.start or not self.pr.end: print("job_sendbin: pr.start - pr.end"); return False
@@ -540,16 +570,16 @@ class KC_Job:
         
         # Header - Nutzdaten senden
         try:
-        
-            print("Sende Header")
+            ser = self._get_ser()
+            print("--- job_sendbin: Sende Header ---")
             print(" ".join(f"{b:02X}" for b in header))
 
-            self.ser.write(header[0:1])
-            self.ser.flush()
+            ser.write(header[0:1])
+            ser.flush()
             time.sleep(0.1)
 
-            self.ser.write(header[1:])
-            self.ser.flush()
+            ser.write(header[1:])
+            ser.flush()
              
             # Schnittstellen-Modus wurde umgeschaltet
             self.parent.set_trans_state("BIN")
@@ -561,15 +591,15 @@ class KC_Job:
             block_size = 64
             total = len(self.pr.transferdata)
             offset = 0
-            print("Sende Daten ...")
+            print("--- job_sendbin: Sende Daten ---")
 
             self.cancelable = True   # als cancelbar kennzeichnen
 
             while offset < total and not self._cancel.is_set():  # _cancel aus threading
                 chunk = self.pr.transferdata[offset:offset + block_size]
                 try:
-                    self.ser.write(chunk)
-                    self.ser.flush()
+                    ser.write(chunk)
+                    ser.flush()
                 except serial.SerialException as e:
                     print(f"job_sendbin: {e}")
                     #self.binary_error = str(e)
@@ -580,6 +610,8 @@ class KC_Job:
                     self.sent = offset
                 #print(f"Bytes gesendet: {offset} von {total}", flush=True)
             
+            #print(self.hexdump(self.pr.transferdata, 8))
+            print(f"Laenge: {len(self.pr.transferdata):04X} - {len(self.pr.transferdata)}")
             print(f"Bytes gesendet (gesamt): {offset}")
             
             self.cancelable = False   # als nicht cancelbar kennzeichnen
@@ -589,9 +621,7 @@ class KC_Job:
                 with self._lock:
                     self.state = self._JS_CANCELED
 
-                #raise RuntimeError("Job abgebrochen")
             else:
-                #self.parent.set_trans_state("BIN")
                 with self._lock:
                     self.state = self._JS_DONE
                     
@@ -606,7 +636,7 @@ class KC_Job:
     # (Polling-Modus)
     def job_runbin(self) -> bool:
         print("job_runbin() wird gestartet")
-        if self.ser is None: print("job_runbin: ser"); return False
+        
         if self.pr.errorstate: print("job_runbin: pr.errorstate"); return False
         if not self.pr.callu: print("job_runbin: pr.callu"); return False
         if self.parent.get_trans_state() == "BROKE": print("job_runbin: transfer_state BROKE"); return False
@@ -629,16 +659,16 @@ class KC_Job:
         
         # Header - Nutzdaten senden
         try:
-        
+            ser = self._get_ser()
             print("Sende Header")
             print(" ".join(f"{b:02X}" for b in header))
 
-            self.ser.write(header[0:1])
-            self.ser.flush()
+            ser.write(header[0:1])
+            ser.flush()
             time.sleep(0.1)
 
-            self.ser.write(header[1:])
-            self.ser.flush()
+            ser.write(header[1:])
+            ser.flush()
             
             # Schnittstellen-Modus wurde umgeschaltet
             self.parent.set_trans_state("BIN")
@@ -655,14 +685,14 @@ class KC_Job:
     # (Tastaturausgaben)
     def job_runbinmenu(self) -> bool:
         print("job_runbasic() wird gestartet")
-        if self.ser is None: print("job_runbasic: ser"); return False
         
         try:
+            ser = self._get_ser()
             if self.pr.namep:
                 #time.sleep(self.parent.textconfig_init_basic2delay / 1000.0)
-                self.ser.write(self.pr.namep.encode("ascii", errors="replace"))# B in CHAOS
-                self.ser.write(b"\x0D") # ENTER
-                self.ser.flush()
+                ser.write(self.pr.namep.encode("ascii", errors="replace"))# B in CHAOS
+                ser.write(b"\x0D") # ENTER
+                ser.flush()
 
                 with self._lock:
                     self.state = self._JS_DONE
@@ -676,3 +706,15 @@ class KC_Job:
             print(f"job_runbasic: {e}")
             return False
     
+    def hexdump(self, data: Union[bytes, bytearray], width: int = 16, with_offset: bool = True) -> str:
+        if not isinstance(data, (bytes, bytearray)):
+            raise TypeError("data muss bytes oder bytearray sein")
+        if width <= 0:
+            raise ValueError("width muss > 0 sein")
+
+        lines = []
+        for off in range(0, len(data), width):
+            chunk = data[off:off + width]
+            hexpart = " ".join(f"{b:02X}" for b in chunk)
+            lines.append(f"{off:04X}: {hexpart}" if with_offset else hexpart)
+        return "\n".join(lines)

@@ -116,6 +116,14 @@ Dabei gibt es zwei grundsätzliche Modi:
   
 Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst nach einem RESET wieder aktiviert werden (leider)
 
+### Schnelllader - Polling-Routine
+
+KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigene ESC-T-protokollkompatible Empfangsroutine ("Schnelllader"). Der Code dieser Routine wird von KC-V24-Transfer via CAOS-Polling in einen vom später zu ladenden Programm unbelegten Speicherbereich vorgeladen und gestartet. Der Schnellader schaltet die CAOS-Duplexroutine ab, konfiguriert die Schnittstellengeschwindigkeit auf 2400 Baud und lädt das gewünschte Programm in den Speicher. Nach Abschluss der Übertragung wird die Schnittstellengeschwindigkeit wieder auf 1200 Baud zurückgeschaltet und die CAOS-Duplexroutine wieder eingeschaltet (um. z.B. wieder in den Tastaturmodus gelangen zu können).
+
+Warum keine höheren Übertragungsraten? Obwohl der in der Schnittstelle verbaute DART/CTC theoretisch auch höhere Übertragungsraten als 2400 Baud zulässt, kommt es bei höheren Datenraten im verwendeten asynchronen Modus (8N1) zu Übertragungsfehlern ("Bits kippen"). Das ist wahrscheinlich dem für die Baudraten etwas "schrägen" Grundtakt des KC geschuldet, der von den Schnittstellenbausteinen in den Modi oberhalb 2400 Baud als Referenztakt genutzt wird (CTC läuft für diese Modi nicht mehr im Timermodus, sondern im Countermodus). Daher können diese Modi oberhalb von 2400 Baud nur zur Kopplung von zwei Systemen gleichen Grundtaktes effektiv genutzt werden (z.B. Kopplung KC<->KC).
+
+Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt im lokalen Benutzerprofilverzeichnis unter ```%LOCALAPPDATA%\KC-V24-Transfer\KC-V24-Transfer.ini```. Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet den Schnelllader ab.
+
 ## Speicherformate
 
 - KCC
