@@ -193,7 +193,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
  
  Die unterschiedliche Zeilendaten-Verarbeitungszeit wird dabei von KC-V24-Transfer beachtet: Befehlszahl, Variablenreferenzen und Feldvariablenerstellung und -zugriffe werden berechnet und die Wartezeit entsprechend angemessen, um die Übertragung zu beschleunigen.
  
-### Serielles Kabel selber bauen
+## Serielles Kabel selber bauen
 
 Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu recherchieren und zu beachten.
 
