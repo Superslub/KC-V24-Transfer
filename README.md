@@ -213,7 +213,7 @@ Optional können im D-SUB Stecker die Anschlüsse DTR(4),DSR(6) und DCD(1) gebr�
 <div align="center">
 <img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
 &nbsp;&nbsp;&nbsp;&nbsp;
-<img width="169" height="177" alt="grafik" src="https://github.com/user-attachments/assets/b12f8c27-561b-464c-baee-7f38cd0d339d" />
+<img width="169" height="154" alt="grafik" src="https://github.com/user-attachments/assets/73a1e782-2e48-4904-8e60-faa7bcd7df30" />
 <br/><br/>
 </div>  
 
