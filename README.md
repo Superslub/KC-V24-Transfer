@@ -195,7 +195,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
  
 ### Serielles Kabel selber bauen
 
-Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu recherchieren und zu beachten
+Das benötigte serielle Kabel kann man sich leicht selbst fertigen. Wichtig ist, die Steckerbelegungen (Pinnummern am Stecker/Buchse) korrekt zu recherchieren und zu beachten.
 
 Verbindungskabel  DIN 5-polig (KC V.24) <-> SUB-D (PC RS-232):
 
@@ -209,6 +209,14 @@ CTS       4   ------<------   RTS       7
 DTR       5   ------>------   CTS       8
 ```               
 Optional können im D-SUB Stecker die Anschlüsse DTR(4),DSR(6) und DCD(1) gebrückt werden
+
+<div align="center">
+<img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
+&nbsp;&nbsp;&nbsp;&nbsp;
+<img width="169" height="177" alt="grafik" src="https://github.com/user-attachments/assets/b12f8c27-561b-464c-baee-7f38cd0d339d" />
+<br/><br/>
+</div>  
+
 
 ---
 ***Danksagung***
