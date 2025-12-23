@@ -208,7 +208,7 @@ TxD       3   ------>------   RxD       2
 CTS       4   ------<------   RTS       7
 DTR       5   ------>------   CTS       8
 ```               
-Optional können im D-SUB Stecker die Anschlüsse DTR(4),DSR(6) und DCD(1) gebrückt werden
+Optional können im D-SUB Stecker die Anschlüsse DTR(4), DSR(6) und DCD(1) gebrückt werden
 
 <div align="center">
 <img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
