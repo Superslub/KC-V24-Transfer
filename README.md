@@ -1,11 +1,20 @@
 # KC-V24-Transfer
 
+	
 Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Superslub/KC-V24-Transfer/raw/refs/heads/main/dist/KC-V24-Transfer.exe)
 
 ***Wozu dient das Programm?***
 
- Mit dem Programm gelingt es mit technischem Minimalaufwand und ohne großes Vorwissen Programme auf einen echten KC zu laden und zu starten. Auch kann die PC-Tastatur als KC-Tastaturersatz genutzt werden. So kann man mit einem KC-Grundgerät und einem M003 ohne Verrenkungen bereits KC-Feeling erleben.
- 
+ Mit dem Programm gelingt es mit technischem Minimalaufwand und ohne großes Vorwissen Programme auf einen echten KC zu laden und zu starten. Auch kann die PC-Tastatur als KC-Tastaturersatz genutzt werden. So kann man mit einem KC-Grundgerät und einem M003 ohne Verrenkungen bereits echtes KC-Feeling erleben.
+
+<div align="center">
+<img width="322" height="224" alt="app1" src="https://github.com/user-attachments/assets/dad0a225-92d0-49c1-aced-d01b194510c1" />
+&nbsp;&nbsp;&nbsp;&nbsp;
+<img width="322" height="224" alt="app2" src="https://github.com/user-attachments/assets/bc4eb4e8-1877-44fa-9c2a-3eed4d31b2f0" />
+<br/><br/>
+</div>  
+
+     
 ***Wie benutzt man das Programm***
  
  Das Programm überträgt KC-Programmdateien geläufiger Formate automatisch auf den KC und startet diese dort.
@@ -122,7 +131,7 @@ KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigen
 
 Warum keine höheren Übertragungsraten? Obwohl der in der Schnittstelle verbaute DART/CTC theoretisch auch höhere Übertragungsraten als 2400 Baud zulässt, kommt es bei höheren Datenraten im verwendeten asynchronen Modus (8N1) zu Übertragungsfehlern ("Bits kippen"). Das ist wahrscheinlich dem für die Baudraten etwas "schrägen" Grundtakt des KC geschuldet, der von den Schnittstellenbausteinen in den Modi oberhalb 2400 Baud als Referenztakt genutzt wird (CTC läuft für diese Modi nicht mehr im Timermodus, sondern im Countermodus). Daher können diese Modi oberhalb von 2400 Baud nur zur Kopplung von zwei Systemen gleichen Grundtaktes effektiv genutzt werden (z.B. Kopplung KC<->KC).
 
-Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt im lokalen Benutzerprofilverzeichnis unter
+Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt unter Windows im lokalen Benutzerprofilverzeichnis unter
 
 ```%LOCALAPPDATA%\KC-V24-Transfer\KC-V24-Transfer.ini```
 
