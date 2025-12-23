@@ -11,8 +11,10 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 <img width="322" height="224" alt="app1" src="https://github.com/user-attachments/assets/dad0a225-92d0-49c1-aced-d01b194510c1" />
 &nbsp;&nbsp;&nbsp;&nbsp;
 <img width="322" height="224" alt="app2" src="https://github.com/user-attachments/assets/bc4eb4e8-1877-44fa-9c2a-3eed4d31b2f0" />
-</div>
- 
+<br/><br/>
+</div>  
+
+     
 ***Wie benutzt man das Programm***
  
  Das Programm überträgt KC-Programmdateien geläufiger Formate automatisch auf den KC und startet diese dort.
