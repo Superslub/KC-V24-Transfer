@@ -174,6 +174,8 @@ class KC_V24_Transfer_BASICdetokenizer:
                     0xDC: 0x7D,  # Ü -> ü
                     0xDF: 0x7E,  # ß
 
+                    0x90: 0x20,  # Tab -> Leerzeichen
+
                     0xAC: 0x5D,  # ¬ 
                     0x7C: 0x5C,  # |
                     0xA9: 0x60,  # ©
@@ -183,6 +185,8 @@ class KC_V24_Transfer_BASICdetokenizer:
                     0x94: 0x22,  # ”  -> "
                     0x96: 0x2D,  # –  -> -
                     0x97: 0x2D,  # —  -> -
+                    
+                    
                  }
     # Mapping von latin1-Zeichencodes auf KC-Zeichencodes
     #out = bytes(mapping.get(b, b) for b in data)           # bytes
