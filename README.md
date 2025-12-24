@@ -30,7 +30,7 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 
  - KC: M003 - V.24-Modul
  - PC: COM-Port, z.B. via USB-COM-Portadapter
- - serielles Kabel zwischen KC(DIN 5polig) <==> PC (D-SUB 9polig) - siehe Kapitel "[Serielles Kabel](#Serielles-Kabel-selber-bauen)"
+ - serielles Kabel zwischen KC (DIN 5polig) <==> PC (D-SUB 9polig) - siehe Kapitel "[Serielles Kabel](#Serielles-Kabel-selber-bauen)"
  - KC-Programme zum Laden (aus dem Netz, z.B. .KCC, .KCB, .SSS oder .BAS-Dateien)
 
 # Nutzungshinweise
