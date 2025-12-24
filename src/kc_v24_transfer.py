@@ -775,26 +775,15 @@ class KC_V24_TransferApp:
             return "break"
 
         text = clip.translate(self.UNICODE_CLIPBOARD_MAP)
-        
         # Zeilenenden normalisieren (Clipboard: CRLF/CR -> LF)
         text = text.replace("\r\n", "\r").replace("\n", "\r")
         
-        try:
-            raw = text.encode("latin-1", "strict")
-        except UnicodeEncodeError:
-            text = unicodedata.normalize("NFKD", text)
-            raw = text.encode("latin-1", "replace")
-            print("on_pastetext() UNICODE")
-        
-        #latin2kc = KC_V24_Transfer_BASICdetokenizer._LATIN_2_KC
-        
-        # Latin-1 Bytes -> KC Bytes (unbekannte Bytes unverändert lassen)
-        #ba = bytearray(latin2kc.get(b, b) for b in raw)
-        
+        raw_kc = self._kc_payload_from_text(text)
+       
         pr = ParseResult()
         pr.type         = pr._TYPE_TEXT
         pr.format       = pr._FORMAT_RAW
-        pr.transferdata = raw
+        pr.transferdata = raw_kc
         
         pr_nodata = copy.deepcopy(pr)
         pr_nodata.transferdata = bytearray()
@@ -827,25 +816,15 @@ class KC_V24_TransferApp:
             return "break"
 
         text = clip.translate(self.UNICODE_CLIPBOARD_MAP)
-        
         # Zeilenenden normalisieren (Clipboard: CRLF/CR -> LF)
         text = text.replace("\r\n", "\r").replace("\n", "\r")
+        ####
+        raw_kc = self._kc_payload_from_text(text)
         
-        try:
-            raw = text.encode("latin-1", "strict")
-        except UnicodeEncodeError:
-            text = unicodedata.normalize("NFKD", text)
-            raw = text.encode("latin-1", "replace")
-        
-        latin2kc = KC_V24_Transfer_BASICdetokenizer._LATIN_2_KC
-        
-        # Latin-1 Bytes -> KC Bytes (unbekannte Bytes unverändert lassen)
-        ba = bytearray(latin2kc.get(b, b) for b in raw)
-        
-        #try:
-        # einen KC-JOB vom typ _JT_SENDBASICTEXT erzeugen und starten
-        ft = KC_V24_Transfer_FileFormatTools()
-        pr = ft.parseBinData(ba)  # pr ist eine Class ParseResult
+        pr = ParseResult()
+        pr.type         = pr._TYPE_TEXT
+        pr.format       = pr._FORMAT_RAW
+        pr.transferdata = raw_kc
         
         pr_nodata = copy.deepcopy(pr)
         pr_nodata.transferdata = bytearray()
@@ -853,41 +832,44 @@ class KC_V24_TransferApp:
         if self.trans_state != "KEY":
             self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
         
-        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, pause=None))    
-                 
+        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr))
+        
         self.start_processing()
 
         print(pr)
 
         return "break"
+        
 
-    def _kc_payload_from_text(self, text: str) -> bytes:
+    def _kc_payload_from_text(self, text: str) -> bytearray:
         """Wandelt Unicode-Text in KC-Tastaturcodes um (wie bei Einzeltasten)."""
         latin2kc = KC_V24_Transfer_BASICdetokenizer._LATIN_2_KC
-        if not text:
-            return b""
 
-        # Zeilenenden normalisieren (Clipboard: CRLF/CR -> LF)
-        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        try:
+            raw = text.encode("latin-1", "strict")
+        except UnicodeEncodeError:
+            # Nicht-Latin-1-Zeichen auf eine „näherungsweise“ Form bringen
+            text = unicodedata.normalize("NFKD", text)
+            raw = text.encode("latin-1", "replace")
+            print("on_pastetext() UNICODE")
 
-        out = bytearray()
-        for ch in text:
-            if ch == "\n":
-                ch = "\r"
+        # Latin-1 Bytes -> KC Bytes
+        raw_kc = bytearray()
+        for b in raw:
+            b = latin2kc.get(b, b)
 
-            # Upper/LowerCase invertieren für ASCII-Buchstaben
-            #o = ord(ch) if len(ch) == 1 else None
-            #if o is not None:
-            #    if 0x41 <= o <= 0x5A:      # A-Z
-            #        ch = chr(o + 0x20)     # -> a-z
-            #    elif 0x61 <= o <= 0x7A:    # a-z
-            #        ch = chr(o - 0x20)     # -> A-Z
+            # Zeilenende vereinheitlichen: \n -> überspringen (job_sendtext ignoriert 0x0A ohnehin)
+            if b == 0x0A:
+                continue
 
-            raw = ch.encode("latin-1", errors="replace")
-            for b in raw:
-                out.append(latin2kc.get(b, b))
-
-        return bytes(out)
+            # Zulässige KC-Textbytes: CR oder 0x20..0x7F
+            if b == 0x0D or (0x20 <= b < 0x80):
+                raw_kc.append(b)
+            else:
+                # Ersatz für nicht darstellbare Bytes (z.B. 0xBD)
+                raw_kc.append(0x20)  # oder ord('?')
+        
+        return raw_kc
 
 
     def _clipboard_has_text(self) -> bool:
