@@ -129,7 +129,7 @@ Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst na
 
 KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigene ESC-T-protokollkompatible Empfangsroutine ("Schnelllader"). Der Code dieser Routine wird von KC-V24-Transfer via CAOS-Polling in einen vom später zu ladenden Programm unbelegten Speicherbereich vorgeladen und gestartet. Der Schnellader schaltet die CAOS-Duplexroutine ab, konfiguriert die Schnittstellengeschwindigkeit auf 2400 Baud und lädt das gewünschte Programm in den Speicher. Nach Abschluss der Übertragung wird die Schnittstellengeschwindigkeit wieder auf 1200 Baud zurückgeschaltet und die CAOS-Duplexroutine wieder eingeschaltet (um. z.B. wieder in den Tastaturmodus gelangen zu können).
 
-Warum keine höheren Übertragungsraten? Obwohl der in der Schnittstelle verbaute DART/CTC theoretisch auch höhere Übertragungsraten als 2400 Baud zulässt, kommt es bei höheren Datenraten im verwendeten asynchronen Modus (8N1) zu Übertragungsfehlern ("Bits kippen"). Das ist wahrscheinlich dem für die Baudraten etwas "schrägen" Grundtakt des KC geschuldet, der von den Schnittstellenbausteinen in den Modi oberhalb 2400 Baud als Referenztakt genutzt wird (CTC läuft für diese Modi nicht mehr im Timermodus, sondern im Countermodus). Daher können diese Modi oberhalb von 2400 Baud nur zur Kopplung von zwei Systemen gleichen Grundtaktes effektiv genutzt werden (z.B. Kopplung KC<->KC).
+Warum keine höheren Übertragungsraten? Obwohl der in der Schnittstelle verbaute DART/CTC theoretisch auch höhere Übertragungsraten als 2400 Baud zulässt, kommt es bei höheren Datenraten im verwendeten asynchronen Modus (8N1) zu Übertragungsfehlern ("Bits kippen"). Das ist wahrscheinlich dem für die Baudraten etwas "schrägen" Grundtakt des KC geschuldet, der von den Schnittstellenbausteinen als Referenztakt genutzt wird. Daher können diese Modi oberhalb von 2400 Baud nur zur Kopplung von zwei Systemen gleichen Grundtaktes effektiv genutzt werden (z.B. Kopplung KC<->KC).
 
 Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt unter Windows im lokalen Benutzerprofilverzeichnis unter
 
@@ -211,9 +211,9 @@ DTR       5   ------>------   CTS       8
 Optional können im D-SUB Stecker die Anschlüsse DTR(4), DSR(6) und DCD(1) gebrückt werden
 
 <div align="center">
-<img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
-&nbsp;&nbsp;&nbsp;&nbsp;
 <img width="169" height="154" alt="grafik" src="https://github.com/user-attachments/assets/73a1e782-2e48-4904-8e60-faa7bcd7df30" />
+&nbsp;&nbsp;&nbsp;&nbsp;
+<img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
 <br/><br/>
 </div>  
 
