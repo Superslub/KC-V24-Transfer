@@ -411,6 +411,7 @@ class KC_V24_TransferApp:
             self._jobstotal     += job.total
             self._totaljobcount += 1
 
+        self._keybmode_enabled = False
         self.jobs_starttime = datetime.now()
         self._rlz_hist_seconds.clear()
 
