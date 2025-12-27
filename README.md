@@ -56,7 +56,8 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
  4. ***Tastaturmodus***: Nach der Programmübertragung(*) wird der KC in den Tastaturmodus geschaltet. Sofern das KC-V24-Transfer aktiv ist, werden alle Tastatureingaben am PC an den KC übertragen. Ist der Modus eingeschaltet, kann auch der Inhalt der Zwischenablage vom PC an den KC übertragen werden. Entweder über die Tastenkombination "```Strg+-V```" im Programmfenster oder das Kontextmenü (siehe unten "Tastaturmodus")
 
  (* wird ein Binärprogramm übertragen und im Anschluss nicht gestartet, wird der  Tastaturmodus nicht eingeschaltet - kann aber nachträglich manuell eingeschaltet werden.)
- 
+
+***Hinweis***: Es gibt Programme, die verhindern den Start von anderen Programmen auch nach einem ```RESET```. Sollte ein geladenes Programm also einmal nicht starten, hilft es evtl., den KC vor dem nochmaligen Laden einmal aus- und wieder anzuschalten. 
 
 #### Besonderheiten BASICODE:
 Für Basicode-Programme wird automatisch der Bascoder (v1.5) vorgeladen und gestartet. Wird direkt nach einem BASICODE-Programm ein weiteres BASICODE-Programm übertragen, muss der BASICODER nicht noch einmal übertragen werden.
