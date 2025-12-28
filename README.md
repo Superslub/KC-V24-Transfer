@@ -28,8 +28,8 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 
 ***Was benötigt man zur Nutzung? (technische Voraussetzungen)***
 
- - KC: M003 - V.24-Modul
- - PC: COM-Port, z.B. via USB-COM-Portadapter
+ - KC85/4: M003 - V.24-Modul
+ - PC(Win): COM-Port, z.B. via USB-COM-Portadapter
  - serielles Kabel zwischen KC (DIN 5polig) <==> PC (D-SUB 9polig) - siehe Kapitel "[Serielles Kabel](#Serielles-Kabel-selber-bauen)"
  - KC-Programme zum Laden (aus dem Netz, z.B. .KCC, .KCB, .SSS oder .BAS-Dateien) - z.B. von [www.kcclub.de](https://www.kcclub.de/old_download/09/0900.HTML)
 
@@ -37,7 +37,7 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 	
 ## Vorbereitung (Hardware)
 
- 1. M003 muss im Grundgerät gesteckt sein
+ 1. M003 muss im Grundgerät gesteckt sein (Schacht 8)
  2. das Serielle Kabel muss in Anschluss "K2" des M003 stecken (rechte Buchse)
  3. am PC muss das Kabel mit einem freien COM-Port verbunden sein
 
