@@ -112,7 +112,7 @@ Wurde ein Programm übertragen und nicht automatisch gestartet, so kann das Prog
 
 ## Duplexroutine (mit Empfangsinterrupt) des M003 mit CAOS 4.2
 
-Es werden dabei vom KC-CAOS 4.2 standardmäßig bereitgestellte Übertragungsmechanismen genutzt:
+Von KC-V24-Tranfer werden vom KC-CAOS 4.2 standardmäßig bereitgestellte Übertragungsmechanismen genutzt:
 Bei vorhandenem M003-Modul wartet KC-CAOS nach einem RESET automatisch auf Datenübertragungen.
 Dabei gibt es zwei grundsätzliche Modi:
 - Binärübertragung (ESC-T, „Polling“)
