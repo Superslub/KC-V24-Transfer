@@ -18,7 +18,7 @@ class ParseResult:
     # interne Typ-IDs - Format der Daten in der Datei
     _TYPE_MC         = "Speicherabbild"           # binärer Maschinencode (Speicherabzug)
     _TYPE_BASICMC    = "BASIC (Speicherabbild)"   # binärer BASIC-Code (auch binär!) geladen (Speicherabzug)
-    _TYPE_BASICTEXT  = "BASIC (Zeilen)"           # Basic-Programlisting in ASCII-Form - muss als Tastatureingaben übertragen werden
+    _TYPE_BASICTEXT  = "BASIC (Zeilen)"           # Basic-Programmlisting in ASCII-Form - muss als Tastatureingaben übertragen werden
     _TYPE_BASICODE   = "BASICODE (Zeilen)"        # Basic-Programcode in ASCII-Form - muss als Tastatureingaben übertragen werden - benötigt geladenen BASCODER
     _TYPE_TEXT       = "TEXT"                     # Einfacher Text ohne bekanntes Format zur Übertragung
     

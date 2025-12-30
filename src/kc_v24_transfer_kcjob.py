@@ -60,15 +60,16 @@ class KC_Job:
     
     set_ser_br = None                   # Soll-Geschwindigkeit für Schnittstelle nach Umschaltung
     
-    def __init__(self, parent: KC_V24_TransferApp, type: int, pr: ParseResult, pause: int = 0, askstart=False, savelastline=False, set_ser_br=None) -> None:
-        self.parent       = parent
-        self.type         = type
-        self.askstart     = askstart
-        self.pr           = pr
-        self.state        = self._JS_WAITING
-        self.pause        = pause
-        self.savelastline = savelastline
-        self.set_ser_br   = set_ser_br
+    def __init__(self, parent: KC_V24_TransferApp, type: int, pr: ParseResult, pause: int = 0, askstart=False, savelastline=False, set_ser_br=None, basiclinesoffset=0) -> None:
+        self.parent           = parent
+        self.type             = type
+        self.askstart         = askstart
+        self.pr               = pr
+        self.state            = self._JS_WAITING
+        self.pause            = pause
+        self.savelastline     = savelastline
+        self.set_ser_br       = set_ser_br
+        self.basiclinesoffset = basiclinesoffset
 
         self.total   = len(pr.transferdata)
         #print(f"TRANSFERDATA: {len(pr.transferdata)}")
@@ -132,7 +133,7 @@ class KC_Job:
                 result = self.job_resetbascoder()
                 
             elif self.type == self._JT_SENDBASICTEXT:
-                result = self.job_sendtext(fastmode=True, endreturn=True, sll=self.savelastline)
+                result = self.job_sendtext(fastmode=True, endreturn=True, sll=self.savelastline, basiclinesoffset=self.basiclinesoffset)
                 
             elif self.type == self._JT_SENDTEXT:
                 result = self.job_sendtext(fastmode=False)
@@ -339,7 +340,7 @@ class KC_Job:
     # sendet transferdata als Tastatureingaben
     # tarnsferdata sollte also im HC-Zeichsatz kodiert sein
     # der Keyboardmodus sollte da schon gesetzt sein
-    def job_sendtext(self, fastmode: bool = False, endreturn: bool | None = None, sll: bool | None = None) -> bool:
+    def job_sendtext(self, fastmode: bool = False, endreturn: bool | None = None, sll: bool | None = None, basiclinesoffset: int = 0) -> bool:
         print(f"job_sendtext() fastmode: {fastmode}")
         print(f"job_sendtext() endreturn: {endreturn}")
         
@@ -428,7 +429,7 @@ class KC_Job:
 
                     delay_ms += self.parent.textconfig_process_delay                       # Verarbeitungszeit
                     delay_ms += linecommandcount * self.parent.textconfig_command_addition # zusätzliche Berechnungszeit bei mehreren Befehlen
-                    delay_ms += totallinecount * self.parent.textconfig_linethrottle       # mehr Zeit bei vielen Zeilen
+                    delay_ms += (totallinecount + basiclinesoffset) * self.parent.textconfig_linethrottle       # mehr Zeit bei vielen Zeilen
 
                     # Zusatz-delay für zeitaufwendige DIM-Operationen im BASIC-Text bestimmen
                     dim_refs, dim_units = dimanalyzer.analyze_line(currentlinetext)

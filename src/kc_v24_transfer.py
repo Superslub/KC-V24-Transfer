@@ -47,7 +47,7 @@ class ProcessingResult(Enum):
 class KC_V24_TransferApp:
     
     APP_NAME = "KC-V24-Transfer"
-    VERSION = "1.1"
+    VERSION  = "1.2"
     
     BASE_DIR      = Path(__file__).resolve().parent
     
@@ -248,6 +248,7 @@ class KC_V24_TransferApp:
         # neu: zentral am Hauptfenster binden (greift, sobald das Fenster aktiv ist)
         self.root.bind("<KeyPress>",  self.on_key, "+")
         self.root.bind("<Control-v>", self.on_pastebasic, "+")
+        self.root.bind("<Control-b>", lambda event: self.on_pastebasic(event, slow=True), "+")
         self.root.bind("<Control-V>", self.on_pastetext, "+")
         
         # Fokus sicherstellen, sobald das Fenster aktiv wird
@@ -262,8 +263,9 @@ class KC_V24_TransferApp:
 
         # Kontextmenü (Rechtsklick): Einfügen aus Zwischenablage im Tastaturmodus
         self._context_menu = tk.Menu(self.root, tearoff=0)
-        self._context_menu.add_command(label="Einfügen (Code) <STRG+V>", command=self.on_pastebasic)
-        self._context_menu.add_command(label="Einfügen (Text) <UMSCH+STRG+V>", command=self.on_pastetext)
+        self._context_menu.add_command(label="Einfügen (Code) <STRG+V>",         command=self.on_pastebasic)
+        self._context_menu.add_command(label="Einfügen (Code langsam) <STRG+B>", command=lambda: self.on_pastebasic(slow=True))
+        self._context_menu.add_command(label="Einfügen (Text) <UMSCH+STRG+V>",  command=self.on_pastetext)
         # Rechtsklick global abfangen (auch wenn Fokus in einem anderen Widget liegt)
         self.root.bind_all("<Button-3>", self._show_context_menu, "+")           # Windows/Linux
         self.root.bind_all("<Button-2>", self._show_context_menu, "+")           # macOS (je nach System)
@@ -800,7 +802,7 @@ class KC_V24_TransferApp:
 
         return "break"
 
-    def on_pastebasic(self, event=None):
+    def on_pastebasic(self, event=None, slow=False):
         """Leitet Paste aus der Zwischenablage an die serielle Schnittstelle weiter."""
         if self.trans_state is not None and self.trans_state != "KEY":
             return
@@ -832,8 +834,13 @@ class KC_V24_TransferApp:
         
         if self.trans_state != "KEY":
             self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
-        
-        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr))
+
+        if(slow):       # Eingabe/Übergabe verlangsamen?
+            basiclinesoffset=2000
+        else:
+            basiclinesoffset=0
+
+        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBASICTEXT, pr=pr, basiclinesoffset=basiclinesoffset))
         
         self.start_processing()
 
@@ -1417,16 +1424,13 @@ class KC_V24_TransferApp:
 
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
-                    
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
-                self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata))
                 
-                
-                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, pause=None, askstart=True))
-                ##self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_nodata, pause=800))
-                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
-                #self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata))
+                if self.pr.callu:   # nur wenn Startadresse gegeben ist, nach Start fragen
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBINMENU,    pr=pr_nodata))
+                else:
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200))
                 
                 self.start_processing()
 
