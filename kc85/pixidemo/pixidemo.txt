@@ -1,0 +1,243 @@
+0  ! _________________________________
+1  !
+2  !      BASIC-Scrolltext-DEMO
+3  ! _________________________________
+4  !
+5  ! Es werden Zeichensätze erstellt, 
+6  ! mit deren Umschaltung Scrolltext
+7  ! angezeigt werden kann.
+8  ! Die Kopieroperationen übernimmt
+9  ! aus Zeitgründen Maschinencode
+10 !
+11 !        Stefan Sorg 2024
+12 ! _________________________________
+13 COLOR 7,0:CLS
+15 MC=17920 : !Startadresse Kopierer (4600h)
+20 CLEAR 1024,MC-9
+30 MC=17920 :! Startadresse Kopierer (4600h)
+31 PP=MC-8  :! 4 Byte Parameterblock bei PP..PP+3
+32 BA=18432 : DIM AD(14) : !4800h
+33 BB=25600 : DIM BD(14) : !6400h
+34 DIM AL(14):DIM AH(14):DIM BL(14):DIM BH(14)
+
+35 PS$="Pixi/4" :! Text rechts
+36 PL$="      "
+37 RS$="ROBO/1" :! Text links
+38 RL$="      "
+
+39 ZS=11:ZE=19 :! Zeilenlauf Start Ende
+40 RS=11 :! X-Start Text links
+41 LS=21 :! X-Start Text rechts
+
+42 E$=CHR$(27) :! ESC
+43 E1$=E$+"1":E2$=E$+"2":E3$=E$+"3":E4$=E$+"4"
+
+45 LOCATE 9,0
+46 S$="Tastendruck beendet DEMO":GOSUB4000
+47 ?"":S$="(Geduld!)":GOSUB4000
+48 ?"":?"":?"":?""
+
+50 S$="Daten laden...":GOSUB5000
+55 GOSUB 9000 : REM Maschinencode laden
+56 S$="Daten geladen":GOSUB5000
+
+60 C0=14246 : C1=14248 :! Pointeradressen für Zeichentabellen im ROM
+70 LO=VPEEK(C0) : HI=VPEEK(C0+1) : SR=LO+256*HI
+72 LO=VPEEK(C1) : HI=VPEEK(C1+1) : S2=LO+256*HI
+80 IF SR>=BA AND SR<BA+7168 THEN SR=60928
+82 IF S2>=BB AND S2<BB+7168 THEN S2=65024  : REM FE00h als ROM-Quelle fuer CCTL1
+
+100 S$="Zeiger erzeugen...":GOSUB5000
+110 AD(0)=SR:
+111 AL(0)=AD(0)-256*INT(AD(0)/256)
+112 AH(0)=INT(AD(0)/256)
+120 BD(0)=S2
+121 BL(0)=BD(0)-256*INT(BD(0)/256)
+122 BH(0)=INT(BD(0)/256)
+
+130 FOR I=1 TO 14
+131 AD(I)=BA+(I-1)*512
+132 AL(I)=AD(I)-256*INT(AD(I)/256)
+133 AH(I)=INT(AD(I)/256)
+134 BD(I)=BB+(I-1)*512
+135 BL(I)=BD(I)-256*INT(BD(I)/256)
+136 BH(I)=INT(BD(I)/256)
+137 NEXT I
+138 S$="Zeiger erzeugt":GOSUB5000
+
+145 S$="Blöcke erzeugen...":GOSUB5000
+146 DOKE 772,MC  :REM USR-Startadresse setzen
+150 X=USR(0)
+155 S$="Blöcke erzeugt":GOSUB5000
+
+798 LOCATE0,0:CLS
+799 ?E1$;:CLS
+800 ?E3$;:CLS :! A: Bild 2 - W:Bild 1
+810 ?E4$;:!CLS :! A: Bild 1 - W:Bild 2
+840 CS=1      :! aktuell angezeigtes Bild
+
+
+900 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel
+910 GOSUB 8000 :! Rahmen zeichen
+920 PRINT AT(ZS,RS);RS$;
+930 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel
+940 GOSUB 8000 :! Rahmen zeichen
+950 PRINT AT(ZS,RS);RS$;
+
+1000 REM Lauf starten
+1010 J=0:GOSUB 2000
+1110 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel
+1120 PRINT AT(ZS,LS);PS$; :! Startposition
+1130 PRINT AT(ZS+1,LS);PL$
+1140 IF INKEY$<>"" THEN GOTO 30000  :!stop
+
+1147 FOR ZO=ZS TO ZE:ZU=ZO+1
+
+1158 FOR I=1 TO 7 :   !Linienwechsel nach unten
+1159 GOSUB 1300
+1160 NEXT I
+
+1161 !Zeilenwechsel bei nach unten
+1162 J=0: GOSUB 2000      :! Vollzeichen 
+1163 PRINT AT(ZO,RS);RL$; :! Robo
+1164 PRINT AT(ZU,RS);RS$; :! Robo
+1166 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel (7 anzeigen)
+1170 PRINT AT(ZO,LS);PL$; :! 6 ueberschreiben
+1172 PRINT AT(ZU,LS);PS$; :! Vollzeichen in die Nächste Zeile
+
+1173 PRINT AT(ZO,RS);RL$; :! Robo
+1174 PRINT AT(ZU,RS);RS$; :! Robo
+
+1180 NEXT ZO
+
+1185 IF INKEY$<>"" THEN GOTO 30000  :!stop
+
+1190 FOR ZO=ZE TO ZS STEP-1:ZU=ZO+1
+
+1195 FOR I=6 TO 1 STEP -1:!Linienwechsel nach oben
+1200 GOSUB 1400
+1210 NEXT I
+
+1250 !Zeilenwechsel bei nach oben
+1251 J=0: GOSUB 2000      :! Vollzeichen 
+1255 PRINT AT(ZU,RS);RL$; :! Robo
+1256 PRINT AT(ZO,RS);RS$; :! Robo
+1260 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel (1 anzeigen)
+1265 J=0: GOSUB 2000      :! Vollzeichen 
+1275 PRINT AT(ZU,LS);PL$; :! 2 überschreiben
+1276 PRINT AT(ZO,LS);PS$; :! Vollzeichen in die obere Zeile
+
+1280 PRINT AT(ZU,RS);RL$; :! Robo
+1281 PRINT AT(ZO,RS);RS$; :! Robo
+1290 NEXT ZO
+1295 GOTO 1000
+
+
+1300 ! nach unten
+1302 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel
+1303 IF I=1 THEN PRINT AT(ZO-1,LS);PL$;:PRINT AT(ZO-1,RS);RL$; :! die 7 aus der Vorzeile überschreiben
+1305 J=I+7
+1310 GOSUB 2000
+1320 PRINT AT(ZU,LS);PS$;
+1330 J=I
+1340 GOSUB 2000
+1350 PRINT AT(ZO,LS);PS$;
+1390 RETURN
+
+1400 ! nach oben
+1402 TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1 :! Bildwechsel
+1403 IF I=6 THEN PRINT AT(ZU+1,LS);PL$; :! die 1 aus der Nachzeile überschreiben
+1405 J=I 
+1440 GOSUB 2000
+1450 PRINT AT(ZO,LS);PS$;
+1460 J=I+7
+1470 GOSUB 2000
+1480 PRINT AT(ZU,LS);PS$;
+1490 RETURN
+ 
+1500 !TS=CS:IFTS=1THEN?E4$;:CS=2:ELSE?E3$;:CS=1
+1510 RETURN
+
+2000 REM Switch Block nach J AD(J)/BD(J)
+2010 !LO=AD(J)-256*INT(AD(J)/256)
+2020 !HI=INT(AD(J)/256)
+2030 !VPOKE C0,LO: VPOKE C0+1,HI
+2031 VPOKE C0,AL(J): VPOKE C0+1,AH(J)
+
+2040 !LO=BD(J)-256*INT(BD(J)/256)
+2050 !HI=INT(BD(J)/256)
+2060 !VPOKE C1,LO: VPOKE C1+1,HI
+2061 VPOKE C1,BL(J): VPOKE C1+1,BH(J)
+2100 RETURN
+
+4000 ! Text aus S$ zentrieren
+4010 FU$ = STRING$(19-LEN(S$)/2, " ")
+4020 PRINT FU$+S$
+4100 RETURN
+
+
+5000 ! Text aus S$ zentrieren
+5010 FU$ = STRING$(13, " ")
+5020 PRINT FU$+S$
+5100 RETURN
+
+8000 ! Rahmen zeichnen
+
+8003 LOCATE ZS-3,15:COLOR 4,0
+8004 ?"HC-BASIC"
+8005 COLOR 7,0
+8006 RA=8
+8010 XL=8*(RS-1)-1:XR=8*(LS+LEN(PS$)+1)+0
+8015 YO=8*(32-ZS+1)+0:YU=8*(32-ZE-3)-1
+8020 LINE XL, YO-RA, XL, YU+RA, 7 :! links
+8030 LINE XL+RA, YO, XR-RA, YO, 7 :! oben
+8040 LINE XR, YO-RA, XR, YU+RA, 7 :! rechts
+8050 LINE XR-RA, YU, XL+RA, YU, 7 :! unten
+8060 CIRCLE XL+RA, YO-RA, RA,7 :! links oben
+8070 CIRCLE XR-RA, YO-RA, RA,7 :! rechts oben
+8080 CIRCLE XR-RA, YU+RA, RA,7
+8090 CIRCLE XL+RA, YU+RA, RA,7
+8100 ? AT(ZS-1,RS);" "; :! Links oben
+8110 ? AT(ZS,RS-1);" ";
+8120 ? AT(ZS,RS);" ";
+8125 X=LS+LEN(PS$)
+8130 ? AT(ZS-1,X-1);" "; :! Rechts oben
+8140 ? AT(ZS,X-1);" ";
+8150 ? AT(ZS,X);" ";
+8160 ? AT(ZE+1,X);" "; :! Rechts unten
+8170 ? AT(ZE+1,X-1);" ";
+8180 ? AT(ZE+2,X-1);" ";
+8190 ? AT(ZE+1,RS);" "; :! Links unten
+8200 ? AT(ZE+1,RS-1);" ";
+8210 ? AT(ZE+2,RS);" ";
+8215 COLOR 4,0
+8220 J$=STRING$(LS-RS-LEN(RS$)-2,"_")
+8230 FORI=ZS TO ZE
+8240 ?AT(I,RS+LEN(RS$)+1);J$;
+8250 NEXT I
+8255 COLOR 7,0
+8300 RETURN
+
+9000 ! MC-Code laden
+9010 RESTORE 10000
+9020 FOR I=0 TO 129
+9030 READ B:POKE MC+I,B
+9040 NEXT I
+9060 RETURN
+
+10000 DATA 205,111,201,205,24,240,42,166,183,205,27,240,17,0,72,205
+10010 DATA 39,70,205,24,240,42,168,183,205,27,240,17,0,100,205,39
+10020 DATA 70,175,71,205,177,208,201,34,128,70,14,1,205,65,70,12
+10030 DATA 121,254,8,32,247,14,1,205,95,70,12,121,254,8,32,247
+10040 DATA 201,42,128,70,6,64,197,65,175,18,19,16,252,62,8,145
+10050 DATA 71,126,35,18,19,16,250,65,35,16,253,193,16,232,201,42
+10060 DATA 128,70,6,64,197,62,8,145,71,35,16,253,65,126,35,18
+10070 DATA 19,16,250,62,8,145,71,175,18,19,16,252,193,16,229,201
+10080 DATA 0,0
+
+
+30000 J=0:GOSUB 2000
+30010 ?E1$;
+30020 COLOR 7,1:CLS
+30030 PRINT "FERTIG."
+30040 END
