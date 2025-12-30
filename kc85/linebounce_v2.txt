@@ -1,6 +1,6 @@
 10 ! Beendbar durch Tastendruck
 20 !
-30 HC=0 : FC=1    :!Farben (2 gibt es)
+30 HC=0 : FC=7    :!Farben
 40 L=40           :!Anzahl Linien
 50 SP=4:MS=2      :!Speed/Minspeed (4:2)
 60 PV=20:PH=40    :!Randabstand des Zeichenfeldes mind. 1 (50:70)
@@ -13,7 +13,7 @@
 130 BM=0 : IF(V AND 8)=0 THEN BM=1 :!Bitmodus (pixelweise) aktiv?
 170 IF FE=0 THEN ? E$;"9"; :!PixelRAM einschalten
 180 IF BM=0 THEN ? E$;"A"; :!hohe Farbaufloesung
-190 COLOR 0,0
+190 COLOR 7,0
 200 !
 220 PRINT E$;"3";:CLS  :!Init Bild 0
 230 PRINT E$;"4";:CLS  :!Init Bild 1
@@ -36,8 +36,8 @@
 436 !
 440 GOTO 500 :! Subroutine -> überspringen
 450 ! Rahmen zeichnen
-460 LINE RL-1,RU-1,RL-1,RO+1,1:LINE RL-1,RO+1,RR+1,RO+1,1
-470 LINE RR+1,RO+1,RR+1,RU-1,1:LINE RR+1,RU-1,RL-1,RU-1,1
+460 LINE RL-1,RU-1,RL-1,RO+1,FC:LINE RL-1,RO+1,RR+1,RO+1,FC
+470 LINE RR+1,RO+1,RR+1,RU-1,FC:LINE RR+1,RU-1,RL-1,RU-1,FC
 480 RETURN
 490 !
 500 ! --------------- Loop
