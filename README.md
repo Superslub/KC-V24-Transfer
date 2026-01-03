@@ -152,17 +152,17 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
 - KCB
 	- wie KCC, nur mit BASIC-Programm
     - Endbytes des BASIC-programmes 00h 00h 00h 03h
-	- Auffüllungen auf vollen 128kB-Block
+	- Auffüllungen auf vollen 128 Byte-Block
 
 - SSS (Floppy/Disk)
   - kurzer Header (ohne Programmname), Auffüllungen auf 128kB
   - Endbytes des BASIC-programmes 00h 00h 00h 03h
-  - Auffüllungen auf vollen 128kB-Block
+  - Auffüllungen auf vollen 128 Byte-Block
 
 - SSS (TAPE/Kassette)
   - langer Header (inkl. Programmname) + Blocknummern im Datenstrom
   - Endbytes des BASIC-programmes 00h 00h 00h 03h
-  - Auffüllungen auf vollen 128kB-Block
+  - Auffüllungen auf vollen 128 Byte-Block
 
 - TEXT/BAS/ASC
   - einfache Textdateien in 8Bit-Kodierung, die die BASIC-Programmliste enthalten
@@ -173,7 +173,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
 - ***Speicherabzug***
   - Daten eines Speicherbereichs - zur Wiederherstellung wird Anfangsadresse benötigt - zum Starten eine Einsprungadresse
   - CAOS-Menüeintrag (Prologbytes -> hier neben Name auch Einsprungadresse)
-  - Anfangsadresse häufig 0300h
+  - Anfangsadresse häufig 0300h/0401h
   - können im Polling-Modus mit 1200 Baud übertragen und gestartet werden
   
 - ***Tokenisierte BASIC-Programme***
