@@ -13,7 +13,7 @@
 130 BM=0 : IF(V AND 8)=0 THEN BM=1 :!Bitmodus (pixelweise) aktiv?
 170 IF FE=0 THEN ? E$;"9"; :!PixelRAM einschalten
 180 IF BM=0 THEN ? E$;"A"; :!hohe Farbaufloesung
-190 COLOR 7,0
+190 COLOR 0,0
 200 !
 220 PRINT E$;"3";:CLS  :!Init Bild 0
 230 PRINT E$;"4";:CLS  :!Init Bild 1
@@ -80,5 +80,8 @@
 1940 a2=INT(SP*RND(1))+MS: XE=RL+a2 :RETURN
 1960 b2=INT(SP*RND(1))+MS: YE=RU+b2 :RETURN
 9000 !
-9100 PRINT E$;"1"        :!Bild0
-9200 END
+9010 PRINT E$;"A";        :! zurück in Farbauflösungsmodus
+9020 COLOR 7,0
+9030 ?E$;"3";:CLS:?E$;"4";:CLS
+9040 PRINT E$;"1";        :! Bild0
+9050 END
