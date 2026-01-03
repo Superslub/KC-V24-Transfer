@@ -81,30 +81,35 @@ Wenn der Tastaturmodus eingeschaltet ist, wird dieser in KC-V24-Transfer als "ak
  - __Achtung:__ Es gibt (selten) auch Programme, die die Duplexroutine ausschalten. In diesem Fall funktioniert die "Ferntastatur" nicht.
 
  - Einfügen aus der Zwischenablage 
-   - ***Code (Strg+V)***: Zur Übertragung von BASIC-Listings per Zwischenablage. Der Inhalt wird zeilenweise an den BASIC-Prompt übergeben - Nach jeder Zeile wird eine angemessene Pause vor der übertragung der nächsten Zeile eingelegt.
-   - ***Text (Umschalt+Strg+V)***: Inhalt wird einfach "rausgeschrieben"
+   - ```Strg+V``` ***Code***: Zur Übertragung von BASIC-Listings per Zwischenablage. Der Inhalt wird zeilenweise an den BASIC-Prompt übergeben - Nach jeder Zeile wird eine angemessene Pause vor der übertragung der nächsten Zeile eingelegt.
+   - ```Strg+B``` ***Code (langsam)***: Wenn in einem großen BASIC-Programm Zeilen hinzugefügt oder überschrieben werden, kann der BASIC-Editor bei Zeilenübernahme schon einmal ziemliche Denkpausen einlegen. Dann sollte Code mit dieser Funktion eingefügt werden.
+   - ```Umschalt+Strg+V``` ***Text***: Inhalt wird einfach "rausgeschrieben"
+   
    Am PC erstellte und bearbeitete BASIC-Listings können also einfach per Strg-V an einen laufenden BASIC-Prompt am KC übertragen werden.
    
  
  - Zeichenkodierung/Steuertasten 
    - der KC hat als Standardtastenbelegung GROßBUCHSTABEN, diese "Funktion" wird auch auf die PC-Tastatur übernommen. Groß- und Kleinbuchstaben sind also vertauscht.
    - Steuertastenmapping (Kurzübersicht):
-     ESC         -> BRK
-	 Entf        -> DEL
-	 BackSpace   -> CursorLinks + DEL
-     Insert      -> EINF +INS
-	 Pause       -> STOP
-     Home (Pos1) -> HOME
-	 F1-F12      -> F1-F6 + Shift-(F1-F6)
+   
+     |     PC		  |          KC             |
+     |:--------------:|:-----------------------:|
+     | ESC            | BRK						| 
+	 | Entf           | DEL						| 
+	 | BackSpace      | CursorLinks + DEL		| 
+     | Insert         | EINF + INS				| 
+	 | Pause          | STOP					| 
+     | Home (Pos1)    | HOME				    | 
+	 | F1-F12         | F1-F6 + Shift-(F1-F6)	| 
      
    
 #### Manuelles Starten von Programmen
 
 Wurde ein Programm übertragen und nicht automatisch gestartet, so kann das Programm folgendermaßen manuell gestartet werden:
 
- - ***BASIC/BASICODE-Programme***: Geben sie am Befehlsprompt des BASIC-Interpreters (">") den Befehl "RUN" ein und drücken sie "ENTER"
+ - ***BASIC/BASICODE-Programme***: Geben sie am Befehlsprompt des BASIC-Interpreters (```>```) den Befehl ```RUN``` ein und drücken sie ```ENTER```
  
- - ***CAOS-Programme***: Geben sie im CAOS-Menü "%MENU" ein und drücken "ENTER". Daraufhin baut sich das Menü neu auf und es erscheint darin ein neuer Eintrag mit dem Programmnamen. Navigieren sie mit den Cursortasten in die Zeile des neuen Programmnamens und drücken sie "ENTER"
+ - ***CAOS-Programme***: Geben sie im CAOS-Menü ```%MENU``` ein und drücken ```ENTER```. Daraufhin baut sich das Menü neu auf und es erscheint darin ein neuer Eintrag mit dem Programmnamen. Navigieren sie mit den Cursortasten in die Zeile des neuen Programmnamens und drücken sie ```ENTER```
 
 ----
 
@@ -217,7 +222,6 @@ Optional können im D-SUB Stecker die Anschlüsse DTR(4), DSR(6) und DCD(1) gebr
 <img width="251" height="136" alt="grafik" src="https://github.com/user-attachments/assets/25fdbc6d-bca1-48df-8dc9-ec9c42735c6e" />
 <br/><br/>
 </div>  
-
 
 ---
 ***Danksagung***
