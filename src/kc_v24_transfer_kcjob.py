@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from tkinter import messagebox
 import serial
 import time

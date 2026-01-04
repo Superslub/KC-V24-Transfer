@@ -7,12 +7,13 @@
 # 
 # exe bauen aus dem Projektordner (oberhalb ./src) via:
 # python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bin;bin" src\kc_v24_transfer.py
- 
+from __future__ import annotations 
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import font as tkfont
 from pathlib import Path
+import sys
 import configparser
 import serial
 import time
@@ -25,14 +26,12 @@ from collections import deque
 from datetime import datetime
 from typing import List, Optional
 from serial.tools import list_ports
-from pathlib import Path
 
 import kc_v24_transfer_gui as gui
 
 from kc_v24_transfer_kcfileformattools import ParseResult
 
 from kc_v24_transfer_kcfileformattools import KC_V24_Transfer_FileFormatTools
-from kc_v24_transfer_kcfileformattools import ParseResult
 from kc_v24_transfer_basicdetokenizer import KC_V24_Transfer_BASICdetokenizer
 #from kc_v24_transfer_kcfileformattools import ParseResult
 from kc_v24_transfer_kcjob import KC_Job
@@ -299,7 +298,7 @@ class KC_V24_TransferApp:
         
         self._update_keybmode_button()
        
-        self.set_transfer_status(status="bereit")
+        self.set_transfer_status(status=f"bereit (py: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro})")
     
     
     #  de-/aktiviert den Lade- und Senden-Schalter und die COM-Portauswahl
