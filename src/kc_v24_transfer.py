@@ -46,7 +46,7 @@ class ProcessingResult(Enum):
 class KC_V24_TransferApp:
     
     APP_NAME = "KC-V24-Transfer"
-    VERSION  = "1.2"
+    VERSION  = "1.3"
     
     BASE_DIR      = Path(__file__).resolve().parent
     
@@ -60,8 +60,6 @@ class KC_V24_TransferApp:
     CONFIG_PATH   = CONFIG_DIR / (APP_NAME + ".ini")
     ASSET_PATH    = BASE_DIR / "assets"
     BIN_PATH      = BASE_DIR / "bin"
-    
-    
     
     # Zeichen ersetzen für Inhalte aus dem Clipboard
     UNICODE_CLIPBOARD_MAP = str.maketrans({

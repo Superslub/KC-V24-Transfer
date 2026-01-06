@@ -7,7 +7,7 @@ import re
 #@dataclass
 class ParseResult:
     # interne Format-IDs - Format der Datei
-    _FORMAT_TEXT = "Textdatei"               # klassisches KCC-MC-Programm  (Speicherabzug)
+    _FORMAT_TEXT = "Textdatei"          # Textdatei
     _FORMAT_KCC  = "KCC"                # klassisches KCC-MC-Programm  (Speicherabzug)
     _FORMAT_KCB  = "KCB"                # BASIC-Programm im KCC/KCB-Container (Speicherabzug)
     _FORMAT_SSSD = "SSS (Disk)"         # SSS mit BASIC-Datei (FSAVE) - BASIC-Arbeitszellen, die detokenisiert werden müssen 
@@ -35,6 +35,7 @@ class ParseResult:
     ramclass:     Optional[str] = None  # None oder "16k", "32k" oder "48k"
     validstate:   int = 0               # 0, wenn Format valide ist -> alles größer null sind Hinweise auf Fehler
     errorstate:   bool = True           # False, wenn geparst werden konnte, True im Fehlerfall
+    runlinebasic: Optional[str] = None  # Die Zeilennummer, mit der ein Basic-Progtamm gestartet werden soll
 
     def _fmt_addr(self, value: Optional[int]) -> str:
         """Adresswerte konsistent im HEX-Format darstellen."""
@@ -46,30 +47,57 @@ class ParseResult:
         """String-Repräsentation, damit print(result) ebenfalls HEX-Adressen zeigt."""
         return (
             "ParseResult(\n"
-            f"     start={self._fmt_addr(self.start)}\n"
-            f"       end={self._fmt_addr(self.end)}\n"
-            f"    format={self.format}\n"
-            f"     callf={self._fmt_addr(self.callh)}\n"
-            f"     callp={self._fmt_addr(self.callp)}\n"
-            f"     callu={self._fmt_addr(self.callu)}\n"
+            f"       start={self._fmt_addr(self.start)}\n"
+            f"         end={self._fmt_addr(self.end)}\n"
+            f"      format={self.format}\n"
+            f"       callf={self._fmt_addr(self.callh)}\n"
+            f"       callp={self._fmt_addr(self.callp)}\n"
+            f"       callu={self._fmt_addr(self.callu)}\n"
             
-            f"     nameh={self.nameh!r}\n"
-            f"     namep={self.namep!r}\n"
-            f"      type={self.type!r}\n"
-            f"  ramclass={self.ramclass!r}\n"
-            f"validstate={self.validstate}\n"
-            f"errorstate={self.errorstate})"
+            f"       nameh={self.nameh!r}\n"
+            f"       namep={self.namep!r}\n"
+            f"        type={self.type!r}\n"
+            f"    ramclass={self.ramclass!r}\n"
+            f"  validstate={self.validstate}\n"
+            f"  errorstate={self.errorstate})\n"
+            f"runlinebasic={self.runlinebasic})"
         )
         
 class KC_V24_Transfer_FileFormatTools:
 
+    # KC85/4 BASIC-Systembereich 0x0300..0x03D6 (215 Bytes)
+    _KCB_SYS_MEM0300 = bytes.fromhex("""
+        C3 89 C0 C3 67 C9 00 00 01 00 00 D6 00 6F 7C DE
+        00 67 78 DE 00 47 3E 00 C9 00 00 00 35 4A CA 99
+        39 1C 76 98 22 95 B3 98 0A DD 47 98 53 D1 99 99
+        0A 1A 9F 98 65 BC CD 98 D6 77 3E 98 52 C7 4F 80
+        0B FF 1B 00 0A 00 0A 00 00 00 C3 AE C5 00 00 00
+        00 00 00 00 00 00 FF BE FF FF 00 00 C9 00 00 01
+        04 00 20 00 20 8F C0 00 00 00 00 00 00 00 00 00
+        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+        00 00 00 00 00 00 00 00 00 00 00 00 01 00 01 00
+        FF BF B4 03 03 00 1D C3 00 00 00 00 00 00 00 00
+        03 00 1D C3 FF BF 00 00 00 00 00 00 00 00 00 00
+        04 00 00 00 00 00 00
+    """)
+
+    # KC85/4 BASIC-Systembereich 0x03DD..0x0400 (36 Bytes)
+    _KCB_SYS_MEM03DD = bytes.fromhex("""
+        00 04 00 00 00 00 00 00 B4 03 00 30 F4 20 34 37
+        38 35 34 00 30 00 00 00 00 00 00 00 00 00 00 AF
+        00 00 00 00
+    """)
+
+    _KCB_SYS_START_ADDR   = 0x0300
+    _KCB_BASIC_START_ADDR = 0x0401
     # Laut KC85/4-Dokumentation explizit "nicht benutzt"
     _KC_UNUSED_CODES = {0x04, 0x05, 0x06, 0x0E, 0x15, 0x17}
 
     # Steuerzeichen, die wir trotzdem zulassen:
     # 0x0D: CR (ENTER), 0x0A: LF (Zeilenumbruch)
     _ALLOWED_CONTROL_CODES = {0x0A, 0x0D}
-
 
     _BASICODE_START_RE = re.compile(r"^\s*1000(?!\d).*?(?<![A-Za-z])GOTO\s*20(?!\d)", re.IGNORECASE)
     _BASIC_LINE_RE = re.compile(r"^\s*(\d{1,5})(?!\d)")
@@ -108,6 +136,106 @@ class KC_V24_Transfer_FileFormatTools:
             return False
 
         return True
+
+    # viele in eine SSS-Datei abgespeicherte BASIC-Programme haben als erste Zeile ähnliche Aufrufe wie 
+    # 0 CLOSE I#1 : RUN10
+    # die funktion prüft die erste Basic-Zeile auf solche Muster und gibt die von RUN aufgerufene Zeilennummer zurück
+    # gibt None zurück, wenn kein Muster erkannt wurde
+    def get_runline_from_basic(self, data: bytearray) -> str:
+        """
+        Viele in eine SSS-Datei abgespeicherte BASIC-Programme haben als erste Zeile Aufrufe wie:
+            0 CLOSE I#1 : RUN10
+            10CLOSEI#1:RUN50
+
+        Die Funktion prüft die erste BASIC-Zeile auf solche Muster und gibt die von RUN
+        aufgerufene Zeilennummer zurück (als String). Gibt None zurück, wenn kein Muster passt.
+        """
+        if data is None or len(data) == 0:
+            return None
+
+        if isinstance(data, bytes):
+            data = bytearray(data)
+        if not isinstance(data, bytearray):
+            raise TypeError("data muss vom Typ bytearray sein")
+
+        text = bytes(data).decode("latin1", errors="ignore")
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+        # 1) erste nichtleere Zeile ermitteln
+        first_line = None
+        for ln in text.split("\n"):
+            s = ln.strip()
+            if s:
+                first_line = s
+                print(f"BASIC - erste Zeile: {first_line}")
+                break
+        if not first_line:
+            return None
+
+        # 2) muss mit Zeilennummer beginnen
+        m_line = self._BASIC_LINE_RE.match(first_line)
+        if not m_line:
+            return None
+
+        rest = first_line[m_line.end():]  # nach der Zeilennummer
+
+        # 3) String-Literale maskieren (damit RUN/CLOSE in Strings ignoriert wird)
+        def _mask_string_literals(s: str) -> str:
+            out = []
+            i = 0
+            in_str = False
+            while i < len(s):
+                ch = s[i]
+                if ch == '"':
+                    # "" innerhalb eines Strings
+                    if in_str and i + 1 < len(s) and s[i + 1] == '"':
+                        out.append(" ")
+                        out.append(" ")
+                        i += 2
+                        continue
+                    in_str = not in_str
+                    out.append(" ")
+                    i += 1
+                    continue
+                out.append(" " if in_str else ch)
+                i += 1
+            return "".join(out)
+
+        masked = _mask_string_literals(rest)
+
+        # 4) Kommentare abschneiden: '!' oder REM (auch kompakt, z.B. ':REM...')
+        excl = masked.find("!")
+        if excl != -1:
+            masked = masked[:excl]
+
+        m_rem = re.search(r"(?i)(^|[^A-Z0-9$])REM", masked)
+        if m_rem:
+            cut = m_rem.start(0) + (0 if m_rem.group(1) == "" else 1)
+            masked = masked[:cut]
+
+        upper = masked.upper()
+
+        # 5) RUN<zeile> finden (RUN10, RUN 10)
+        m_run = re.search(r"(?<![A-Z0-9$])RUN\s*(\d{1,5})(?!\d)", upper)
+        if not m_run:
+            return None
+
+        run_target = m_run.group(1)
+
+        # 6) optionaler Musteranker: CLOSE I#1 (auch CLOSEI#1, CLOSE I # 1, CLOSE #1)
+        before_run = upper[:m_run.start()]
+        has_close_i1 = re.search(
+            r"(?<![A-Z0-9$])CLOSE\s*(?:I\s*)?#\s*1(?![A-Z0-9$])",
+            before_run
+        ) is not None
+
+        # primär: genau das typische SSS-Muster
+        if has_close_i1:
+            return str(int(run_target))  # normalisieren (z.B. "0010" -> "10")
+
+        # sekundär (häufige Variante): erste Zeile enthält schlicht RUN<zeile>
+        # (hier bewusst konservativ: RUN muss „als Befehl“ vorkommen, nicht als Teil eines Namens)
+        return str(int(run_target))
 
 
     # klassifiziert den im Text enthaltenen Code
@@ -239,6 +367,51 @@ class KC_V24_Transfer_FileFormatTools:
         
         return result
         
+        
+    _KCB_SYS_START_ADDR   = 0x0300
+    _KCB_BASIC_START_ADDR = 0x0401
+
+    def build_basicmc_from_basic_program(self, prog_bytes, *,
+                                       nameh: Optional[str] = None,
+                                       fmt: str = ParseResult._FORMAT_SSSD,
+                                       runlinebasic: Optional[str] = None) -> ParseResult:
+        result = ParseResult()
+
+        if isinstance(prog_bytes, bytearray):
+            prog_bytes = bytes(prog_bytes)
+        if not isinstance(prog_bytes, (bytes, bytearray)):
+            raise TypeError("prog_bytes muss bytes/bytearray sein")
+
+        if len(prog_bytes) < 3 or prog_bytes[-3:] != b"\x00\x00\x00":
+            result.validstate = 311
+            result.errorstate = True
+            return result
+
+        prog_len = len(prog_bytes)
+        end_addr = self._KCB_BASIC_START_ADDR + prog_len  # 0x0401 + len
+
+        transferdata = bytearray()
+        transferdata += self._KCB_SYS_MEM0300
+
+        # 3× endAddr (Little Endian)
+        for _ in range(3):
+            transferdata.append(end_addr & 0xFF)
+            transferdata.append((end_addr >> 8) & 0xFF)
+
+        transferdata += self._KCB_SYS_MEM03DD
+        transferdata += prog_bytes
+
+        result.start        = self._KCB_SYS_START_ADDR
+        result.end          = end_addr  # Ladebereich endet bei endAddr-1
+        result.format       = fmt
+        result.type         = ParseResult._TYPE_BASICMC
+        result.nameh        = nameh
+        result.transferdata = transferdata
+        result.ramclass     = self._calc_ramclass(result.end)
+        result.validstate   = 0
+        result.errorstate   = False
+        result.runlinebasic = runlinebasic
+        return result
 
     # gibt ein parseResult mit gesetzten errorstate und type zurück,
     # der errorstate ist True, wenn die übergebenen filedata ungültige Zeichen enthalten,
@@ -496,16 +669,35 @@ class KC_V24_Transfer_FileFormatTools:
             result.errorstate = True
             return result
         
-        transferdata = bytearray(listing.encode("latin1"))
-        
+        # Prüfen, was in der Datei enthalten ist -> BASIC oder BASICODE
+        tmp_transferdata = bytearray(listing.encode("latin1"))
+        tmp_type         = self.classify_basic_text(tmp_transferdata)    # gibt einen TYP-String aus ParseResult zurück
+        # Manche BASIC-Programme beginnen mit unbrauchbaren Zeilen wie -> 0 CLOSE I#1 : RUN10
+        # dann muss zur Ausführung direkt in die "richtige" Startzeile gesprungen werden 
+        tmp_runlinebasic = self.get_runline_from_basic(tmp_transferdata) # gibt None oder eine Zeilennummer aus dem Basicprogramm zurück
+        # wenn bASIC enthalten ist, BASIC-MC bilden und als Binärdatei senden
+        if tmp_type == result._TYPE_BASICTEXT:
+            # ab  v1.3: BASICMC-Speicherabbild erzeugen (0x0300.., BASIC ab 0x0401)
+            return self.build_basicmc_from_basic_program(
+                prog_bytes,
+                nameh=None,
+                fmt=ParseResult._FORMAT_SSSD,
+                runlinebasic=tmp_runlinebasic,
+            )
+        # ansonsten als BASIC-Zeilen senden        
         result.format       = result._FORMAT_SSSD
-        result.type         = self.classify_basic_text(transferdata)  # gibt einen TYP-String aus ParseResult zurück
-        result.transferdata = transferdata
+        result.type         = tmp_type
+        result.transferdata = tmp_transferdata
         #result.ramclass     = None
         result.validstate   = 0
         result.errorstate   = False
 
+       
+
+
+        
         return result
+        
 
 
 
@@ -537,7 +729,6 @@ class KC_V24_Transfer_FileFormatTools:
             result.validstate = 400
             result.errorstate = True
             return result
-
 
         # -----------------------------------------------------
         # 2) KC-Bandformat mit SSS-Kennung:
@@ -596,7 +787,6 @@ class KC_V24_Transfer_FileFormatTools:
             detok = KC_V24_Transfer_BASICdetokenizer()
             listing = detok.detokenize_hc_basic(program=prog_bytes, compact=True)
 
-            print(listing)
             for msg in detok.process_messages: print(" -", msg)
 
             if listing is None:
@@ -604,20 +794,25 @@ class KC_V24_Transfer_FileFormatTools:
                 result.errorstate = True
                 return result
 
-
-            transferdata = bytearray(listing.encode("latin1"))
-
-            # ParseResult erzeugen
-            #startaddr = None
-            #endaddr   = None
-
-            #result.start        = startaddr
-            #result.end          = endaddr
-            #result.callh        = None #0x0370                           # nur BASIC-Daten, die ab 0200h geladen wurden, können per CALL gestartet werden
-            result.nameh        = name
+            # Prüfen, was in der Datei enthalten ist -> BASIC oder BASICODE
+            tmp_transferdata = bytearray(listing.encode("latin1"))
+            tmp_type         = self.classify_basic_text(tmp_transferdata)    # gibt einen TYP-String aus ParseResult zurück
+            # Manche BASIC-Programme beginnen mit unbrauchbaren Zeilen wie -> 0 CLOSE I#1 : RUN10
+            # dann muss zur Ausführung direkt in die "richtige" Startzeile gesprungen werden 
+            tmp_runlinebasic = self.get_runline_from_basic(tmp_transferdata) # gibt None oder eine Zeilennummer aus dem Basicprogramm zurück
+            # wenn bASIC enthalten ist, BASIC-MC bilden und als Binärdatei senden
+            if tmp_type == result._TYPE_BASICTEXT:
+                # ab  v1.3: BASICMC-Speicherabbild erzeugen (0x0300.., BASIC ab 0x0401)
+                return self.build_basicmc_from_basic_program(
+                    prog_bytes,
+                    nameh=None,
+                    fmt=ParseResult._FORMAT_SSSK,
+                    runlinebasic=tmp_runlinebasic,
+                )
+            # ansonsten als BASIC-Zeilen senden        
             result.format       = result._FORMAT_SSSK
-            result.type         = self.classify_basic_text(transferdata)  # gibt einen TYP-String aus ParseResult zurück
-            result.transferdata = transferdata  # bytearray(prog)         # nur Nettodaten, ohne Auffüllung
+            result.type         = tmp_type
+            result.transferdata = tmp_transferdata
             #result.ramclass     = None
             result.validstate   = 0
             result.errorstate   = False

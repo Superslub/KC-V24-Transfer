@@ -269,6 +269,10 @@ class KC_Job:
             ser = self._get_ser()
             #time.sleep(self.parent.textconfig_init_basic2delay / 1000.0)
             ser.write("RUN".encode("ascii", errors="replace"))# B in CHAOS
+            
+            if self.pr.runlinebasic is not None:  # eine evtl ermittelte Start-Zeilennummer aus dem BASIC-Programm
+                ser.write((" " + self.pr.runlinebasic).encode("ascii", errors="replace"))
+            
             ser.write(b"\x0D") # ENTER
             ser.flush()
             
