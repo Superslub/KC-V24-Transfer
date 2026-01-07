@@ -147,7 +147,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
 
 - KCC
 	- Header mit Anfangs und Endadresse, optional Einsprungadresse, Programmname 
-	- Auffüllungen auf vollen 128kB-Block
+	- Auffüllungen auf vollen 128 Byte-Block
 
 - KCB
 	- wie KCC, nur mit BASIC-Programm
