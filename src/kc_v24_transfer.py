@@ -18,6 +18,7 @@ import configparser
 import serial
 import time
 import os
+import ctypes
 import threading
 import copy
 import unicodedata
@@ -53,6 +54,8 @@ class KC_V24_TransferApp:
     if os.name == "nt":
         _cfg_root = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
         CONFIG_DIR = Path(_cfg_root) / APP_NAME if _cfg_root else (BASE_DIR / APP_NAME)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_NAME)
+        
     else:
         _xdg = os.environ.get("XDG_CONFIG_HOME")
         CONFIG_DIR = (Path(_xdg) if _xdg else (Path.home() / ".config")) / APP_NAME
@@ -136,9 +139,12 @@ class KC_V24_TransferApp:
         self.root.resizable(False, False)
         
         try:
-            logo_path = str(self.ASSET_PATH / "kc85logo.png")  # z.B. ./assets/logo.png
-            self._img_app_icon = tk.PhotoImage(file=logo_path)
-            self.root.iconphoto(True, self._img_app_icon)
+            logo_path_png = str(self.ASSET_PATH / "kc85logo.png")  # z.B. ./assets/logo.png
+            logo_path_ico = str(self.ASSET_PATH / "kc85logo.ico")  # z.B. ./assets/logo.png
+            self._img_app_icon_png = tk.PhotoImage(file=logo_path_png)
+            #self._img_app_icon_ico = tk.PhotoImage(file=logo_path_ico)
+            self.root.iconphoto(True, self._img_app_icon_png)
+            self.root.iconbitmap(logo_path_ico)
         except Exception as e:
             print(f"Logo konnte nicht geladen werden: {e}")
         
