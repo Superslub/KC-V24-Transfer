@@ -10,7 +10,7 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 <div align="center">
 <img width="322" height="224" alt="app1" src="https://github.com/user-attachments/assets/dad0a225-92d0-49c1-aced-d01b194510c1" />
 &nbsp;&nbsp;&nbsp;&nbsp;
-<img width="322" height="224" alt="app2" src="https://github.com/user-attachments/assets/bc4eb4e8-1877-44fa-9c2a-3eed4d31b2f0" />
+<img width="322" height="224" alt="grafik" src="https://github.com/user-attachments/assets/a1a7fe74-459c-4f63-97e6-f1bc4b6fbd86" />
 <br/><br/>
 </div>  
 
@@ -48,9 +48,9 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
  2. ***Datei Laden***: Hier wird die Datei mit den auf den KC zu übertragenden Programm/Daten ausgewählt und ins Programm geladen. Wenn das Dateiformat eingelesen werden konnte, erscheint in der Statusanzeige "Bereit zur Datenübertragung" sowie da erkannte Datei- und Datenformat 
 
  3. ***Übertragen***: Damit wird der Dateiinhalt mit allen notwendigen Zusatzinformationen auf den KC übertragen. Vor einer Übertragung muss der KC in der Regel per RESET zurückgesetzt werden. Während der Übertragung zeigt der KC keine Meldung oder Bildänderung.
- *Achtung:* Während die Übertragung läuft, darf die Tastatur des KC nicht benutzt werden!
+ *Achtung:* ***Während die Übertragung läuft, darf die Tastatur des KC nicht benutzt werden!***
  Bei der Übertragung von Binärdaten zeigt der KC sein Einschaltbild.
- Textdaten (z.B. BASIC-Programme) werden als "virtuelle Tastatureingaben" übertragen - Auf dem KC-Bildschirm ist dabei der Programmtext bei seiner Übergabe zu beobachten.
+ Textdaten (z.B. BASICODE-Programme) werden als "virtuelle Tastatureingaben" übertragen - Auf dem KC-Bildschirm ist dabei der Programmtext bei seiner Übergabe zu beobachten.
  Wenn die Übertragung abgeschlossen ist, fragt das Programm (wenn möglich), ob das übertragene Programm auf dem KC gestartet werden soll. 
 
  4. ***Tastaturmodus***: Nach der Programmübertragung(*) wird der KC in den Tastaturmodus geschaltet. Sofern das KC-V24-Transfer aktiv ist, werden alle Tastatureingaben am PC an den KC übertragen. Ist der Modus eingeschaltet, kann auch der Inhalt der Zwischenablage vom PC an den KC übertragen werden. Entweder über die Tastenkombination "```Strg+-V```" im Programmfenster oder das Kontextmenü (siehe unten "Tastaturmodus")
@@ -147,7 +147,7 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
 
 - KCC
 	- Header mit Anfangs und Endadresse, optional Einsprungadresse, Programmname 
-	- Auffüllungen auf vollen 128kB-Block
+	- Auffüllungen auf vollen 128 Byte-Block
 
 - KCB
 	- wie KCC, nur mit BASIC-Programm
@@ -180,15 +180,14 @@ Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet d
   - interne Form der Programme, wie sie der BASIC-Interpreter per CSAVE und FSAVE ablegt in Form eines Speicherabzugs (meist ab 0401h)
   - beim Einlesen werden die Daten vom _BASIC-Interpreter_ verarbeitet (Variablen bekommen z.B. ihre Speicheradresse etc.)
   - stumpf per CAOS LOAD zurückgeschriebene Speicherabbilder können deshalb in der Regel nicht (per %REBASIC->RUN) gestartet werden
-  - KC-V24-Transfer enthält deshalb einen Rückkonvertierer (Detokenizer), der die tokenisierten Programmzeilen aus dem Speicherabbild extrahiert und zurück in textliche BASIC-Programmlistings konvertiert, um sie so (zeilenweise) am BASIC-Prompt in den BASIC-Interpreter zu laden. Die vom KC-V24-Transfer erzeugten BASIC-Listings werden für eine beschleunigte Übertragung in einem möglichst kompakten Format erzeugt.
+  - KC-V24-Transfer ergänzt die Programmdaten um zum Start notwendige BASIC-Arbeitszellen etc. und überträgt die Programme binär auf den KC
+  - BASICODE-Programme können nur als Tastatureingaben übertragen werden. KC-V24-Transfer enthält deshalb einen Rückkonvertierer (Detokenizer), der die tokenisierten Programmzeilen aus dem Speicherabbild extrahiert und zurück in textliche BASIC-Programmlistings konvertiert, um sie so (zeilenweise) am BASIC-Prompt in den BASICODER-Interpreter zu laden. Die so vom KC-V24-Transfer erzeugten BASIC-Listings werden für eine beschleunigte Übertragung in einem möglichst kompakten Format erzeugt.
   
 - ***Textliche BASIC-Programmlistings***
   - einfache Textdaten mit den Programmzeilen, wie man sie auch beim Programmieren im BASIC-Interpreter eingibt
   - können im Tastaturmodus nur sehr langsam übertragen werden
   - jede Zeile wird dabei an den BASIC-Prompt übertragen und nach einem <ENTER> vom BASIC-Interpreter tokenisiert und gespeichert
   - können nach Übertragung per RUN aus BASIC heraus gestartet werden
-  - eine Besonderheit stellen BASICODE-Programme dar: Das sind BASIC-Programme, die für ihren Start ein zusätzlich vorher geladenes und gestartetes "Basicoder"-Programm benötigen.
-
 
 ### Übertragung per Tastaturmodus
 
