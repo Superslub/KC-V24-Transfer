@@ -6,7 +6,8 @@
 # Version 1.1 vom 23.12.2025
 # 
 # exe bauen aus dem Projektordner (oberhalb ./src) via:
-# python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bin;bin" src\kc_v24_transfer.py
+# python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bin;bin"  --icon "src\assets\kc85logo.ico" src\kc_v24_transfer.py
+# python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer_win7 --paths src --add-data "src\assets;assets" --add-data "src\bin;bin"  --icon "src\assets\kc85logo.ico" src\kc_v24_transfer.py
 from __future__ import annotations 
 
 import tkinter as tk
@@ -47,7 +48,7 @@ class ProcessingResult(Enum):
 class KC_V24_TransferApp:
     
     APP_NAME = "KC-V24-Transfer"
-    VERSION  = "1.3"
+    VERSION  = "1.4"
     
     BASE_DIR      = Path(__file__).resolve().parent
     
@@ -1047,14 +1048,14 @@ class KC_V24_TransferApp:
     
     def load_stubs(self) -> None:
         """
-        Lädt 2400-Baud-Umschaltstubs und bereitet ParseResults vor,
+        Lädt die Baud-Umschaltstubs und bereitet ParseResults vor,
         die oben oder unten im Speicherraum als Preloader geladen werden können
         """
         try:
         
             # Stub für den unteren Speicherbereich
             
-            stub_path = self.BASE_DIR / "bin" / "Polling_2400_8N1_ESC-T_0200.bin"  # Dateiname ggf. anpassen
+            stub_path = self.BASE_DIR / "bin" / "Polling_ESC-T_0200.bin"  # Dateiname ggf. anpassen
             data = bytearray(stub_path.read_bytes())
             if not data:
                 raise ValueError("200-Stub ist leer.")
@@ -1077,7 +1078,7 @@ class KC_V24_TransferApp:
 
             # Stub für den oberen Speicherbereich
 
-            stub_path = self.BASE_DIR / "bin" / "Polling_2400_8N1_ESC-T_BF00.bin"  # Dateiname ggf. anpassen
+            stub_path = self.BASE_DIR / "bin" / "Polling_ESC-T_BF00.bin"  # Dateiname ggf. anpassen
             data = bytearray(stub_path.read_bytes())
             if not data:
                 raise ValueError("BF00-Stub ist leer.")
@@ -1177,7 +1178,9 @@ class KC_V24_TransferApp:
             print(pr)
             if pr.errorstate:
                 #TODO Fehlermeldung und Rückkehr
-                self.set_transfer_status(status="Dateiformat ungültig")
+                self.pr = None
+                self.set_controls_send(text=self.SBTN_SEND, send_enabled=False)
+                self.set_transfer_status(status="Dateiformat unbekannt")
                 return
 
             elif pr.validstate > 0:  # konnte geparst werden, aber es gab ein Problem mit dem Dateiformat - Sendeversuch aber möglich
@@ -1195,6 +1198,7 @@ class KC_V24_TransferApp:
             print("load_file -> Datei geladen")
             
         except Exception as e:
+            self.pr = None
             self.set_controls_send(text=self.SBTN_SEND, send_enabled=False)
             self.set_transfer_status(status="Dateiladefehler")
             messagebox.showerror("Fehler", f"Fehler beim Laden der Datei:\n{e}")
@@ -1324,7 +1328,7 @@ class KC_V24_TransferApp:
                                 pr_stub_nodata = pr_0200stub_nodata
 
                             self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
-                            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                            self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=57600, pause=100))
 
                         # Bascoder vorladen
                         self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder))
@@ -1359,7 +1363,7 @@ class KC_V24_TransferApp:
                             pr_stub_nodata = pr_0200stub_nodata
 
                         self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
-                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                        self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=57600, pause=100))
                     
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr_bascoder, set_ser_br=1200))
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
@@ -1394,7 +1398,7 @@ class KC_V24_TransferApp:
                         pr_stub_nodata = pr_0200stub_nodata
 
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=57600, pause=100))
 
                 self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
                 self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_STARTKEYBMODE, pr=pr_nodata))
@@ -1426,7 +1430,7 @@ class KC_V24_TransferApp:
                         pr_stub_nodata = pr_0200stub_nodata
 
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=pr_stub))
-                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=2400, pause=100))
+                    self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_RUNBIN,        pr=pr_stub_nodata, set_ser_br=57600, pause=100))
                 
                 if self.pr.callu:   # nur wenn Startadresse gegeben ist, nach Start fragen
                     self.jobs.append(KC_Job(parent=self, type=KC_Job._JT_SENDBIN,       pr=self.pr, set_ser_br=1200, pause=100, askstart=True))
@@ -1485,9 +1489,9 @@ class KC_V24_TransferApp:
                 baudrate=br,
                 bytesize=serial.EIGHTBITS,
                 parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
+                stopbits=serial.STOPBITS_TWO,
                 timeout=1,
-                xonxoff=True,
+                xonxoff=False,
             )
             return ser
         except serial.SerialException as e:
