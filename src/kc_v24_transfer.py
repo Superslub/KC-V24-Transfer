@@ -1,10 +1,8 @@
 # Programm zur Datenübertragung PC -> KC
 # 
-# Daten werden vom COM-Port des PC auf die V.24-Schnittstelle des M003-Moduls im KC84/4 übertragen
+# Daten werden vom COM-Port des PC auf die V.24-Schnittstelle des M003-Moduls im KC85/4 übertragen
 # Dabei wird die beim KC85/4 nach einem RESET standardmäßig aktivierte ESC-T-Polling und Interruptmodus genutzt
 #
-# Version 1.1 vom 23.12.2025
-# 
 # exe bauen aus dem Projektordner (oberhalb ./src) via:
 # python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer --paths src --add-data "src\assets;assets" --add-data "src\bin;bin"  --icon "src\assets\kc85logo.ico" src\kc_v24_transfer.py
 # python -m PyInstaller --noconfirm --clean --onefile --windowed --name KC-V24-Transfer_win7 --paths src --add-data "src\assets;assets" --add-data "src\bin;bin"  --icon "src\assets\kc85logo.ico" src\kc_v24_transfer.py
