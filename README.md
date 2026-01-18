@@ -8,9 +8,13 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
  Mit dem Programm gelingt es mit technischem Minimalaufwand und ohne großes Vorwissen Programme auf einen echten KC85/4 zu laden und zu starten. Auch kann die PC-Tastatur als KC-Tastaturersatz genutzt werden. So kann man mit einem KC-Grundgerät und einem M003 ohne Verrenkungen bereits echtes KC-Feeling erleben.
 
 <div align="center">
-<img width="322" height="224" alt="app1" src="https://github.com/user-attachments/assets/dad0a225-92d0-49c1-aced-d01b194510c1" />
+	<a href="https://github.com/Superslub/KC-V24-Transfer/raw/refs/heads/main/dist/KC-V24-Transfer.exe" download>
+		<img width="322" height="224" alt="app1" src="https://github.com/user-attachments/assets/dad0a225-92d0-49c1-aced-d01b194510c1" />
+	</a>
 &nbsp;&nbsp;&nbsp;&nbsp;
-<img width="322" height="224" alt="grafik" src="https://github.com/user-attachments/assets/a1a7fe74-459c-4f63-97e6-f1bc4b6fbd86" />
+	<a href="https://github.com/Superslub/KC-V24-Transfer/raw/refs/heads/main/dist/KC-V24-Transfer.exe" download>
+		<img width="322" height="224" alt="grafik" src="https://github.com/user-attachments/assets/a1a7fe74-459c-4f63-97e6-f1bc4b6fbd86" />
+	</a>
 <br/><br/>
 </div>  
 
