@@ -136,7 +136,7 @@ Ist der Modus einmal auf "Tastatur" umgeschaltet, kann der Polling-Modus erst na
 
 ### Schnelllader - Polling-Routine
 
-KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigene ESC-T-protokollkompatible Empfangsroutine ("Schnelllader"). Der Code dieser Routine wird von KC-V24-Transfer via CAOS-Polling in einen vom später zu ladenden Programm unbelegten Speicherbereich vorgeladen und gestartet. Der Schnellader schaltet die CAOS-Duplexroutine ab, konfiguriert die Schnittstellengeschwindigkeit auf 57600 Baud und lädt das gewünschte Programm in den Speicher. Nach Abschluss der Übertragung wird die Schnittstellengeschwindigkeit wieder auf 1200 Baud zurückgeschaltet und die CAOS-Duplexroutine wieder eingeschaltet (um. z.B. wieder in den Tastaturmodus gelangen zu können).
+KC-V24-Transfer beschleunigt die Übertragung von Binärdateien durch eine eigene ESC-T-protokollkompatible Empfangsroutine ("Schnelllader"). Der Code dieser Routine wird von KC-V24-Transfer via CAOS-Polling in einen vom später zu ladenden Programm unbelegten Speicherbereich vorgeladen und gestartet. Der Schnellader schaltet die CAOS-Duplexroutine ab, konfiguriert die Schnittstellengeschwindigkeit auf 57600 Baud und lädt das gewünschte Programm in den Speicher. Nach Abschluss der Übertragung wird die Schnittstellengeschwindigkeit wieder auf 1200 Baud zurückgeschaltet und die CAOS-Duplexroutine wieder eingeschaltet (um z.B. wieder in den Tastaturmodus gelangen zu können).
 
 Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Transfer-Konfigurationseintrag abgeschaltet werden. Die Konfigurationsdatei liegt unter Windows im lokalen Benutzerprofilverzeichnis unter
 
@@ -145,6 +145,7 @@ Die Nutzung der Schnelllader-Routine kann über einen Eintrag in der KC-V24-Tran
 Ein dortiger Eintrag ```use_turboload = False``` unter ```[serial]``` schaltet den Schnelllader ab.
 
 ## Speicherformate
+Im Internet finden sich zahlreiche KC-Dateien in verschiedenen Formaten. Die geläufigsten können von KC-V24-Transfer zur Übertragung genutzt werden.
 
 - KCC
 	- Header mit Anfangs und Endadresse, optional Einsprungadresse, Programmname 
