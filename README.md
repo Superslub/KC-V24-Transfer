@@ -27,7 +27,6 @@ Aktuelle Version herunterladen: [KC-V24-Transfer.exe](https://github.com/Supersl
 ***Was das Programm NICHT kann:***
 
  - Rückkanal: Das Programm kann keine Daten vom KC auf den PC rückübertragen
- - schnelle Datenübertragung: das genutzte Verfahren zur Datenübertragung ist ziemlich langsam
  - funktioniert nur mit KC85/4
 
 ***Was benötigt man zur Nutzung? (technische Voraussetzungen)***
