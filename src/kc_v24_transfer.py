@@ -46,7 +46,7 @@ class ProcessingResult(Enum):
 class KC_V24_TransferApp:
     
     APP_NAME = "KC-V24-Transfer"
-    VERSION  = "1.4"
+    VERSION  = "1.5"
     
     BASE_DIR      = Path(__file__).resolve().parent
     
@@ -765,6 +765,9 @@ class KC_V24_TransferApp:
 
     def on_pastetext(self, event=None):
         """Leitet Paste aus der Zwischenablage an die serielle Schnittstelle weiter."""
+        if self._worker and self._worker.is_alive():
+            return "break"  # Hotkey nicht weiterreichen, solange eine Übertragung läuft.
+        
         if self.trans_state is not None and self.trans_state != "KEY":
             return
 
@@ -806,6 +809,9 @@ class KC_V24_TransferApp:
 
     def on_pastebasic(self, event=None, slow=False):
         """Leitet Paste aus der Zwischenablage an die serielle Schnittstelle weiter."""
+        if self._worker and self._worker.is_alive():
+            return "break"  # Hotkey nicht weiterreichen, solange eine Übertragung läuft.
+        
         if self.trans_state is not None and self.trans_state != "KEY":
             return
 

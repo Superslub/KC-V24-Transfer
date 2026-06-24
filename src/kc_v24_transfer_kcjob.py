@@ -597,6 +597,7 @@ class KC_Job:
             block_size = 64
             total = len(self.pr.transferdata)
             offset = 0
+            write_failed = False
             print("--- job_sendbin: Sende Daten ---")
 
             self.cancelable = True   # als cancelbar kennzeichnen
@@ -608,7 +609,7 @@ class KC_Job:
                     ser.flush()
                 except serial.SerialException as e:
                     print(f"job_sendbin: {e}")
-                    #self.binary_error = str(e)
+                    write_failed = True
                     break
 
                 offset += len(chunk)
@@ -622,7 +623,12 @@ class KC_Job:
             
             self.cancelable = False   # als nicht cancelbar kennzeichnen
 
-            if self._cancel.is_set() and offset < total:
+            if write_failed:
+                self.parent.set_trans_state("BROKE")
+                with self._lock:
+                    self.state = self._JS_FAILED
+            
+            elif self._cancel.is_set() and offset < total:
                 self.parent.set_trans_state("BROKE")
                 with self._lock:
                     self.state = self._JS_CANCELED
